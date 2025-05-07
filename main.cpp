@@ -2,25 +2,55 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <string.h>
 
 #define PORT 8080
 
-int main
+int main()
 {
-    int serv_fd;
-    if (serv_fd = socket(AF_INET, SOCK_STREAM, 0) < 0)
+    int serv_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (serv_fd < 0)
     {
         std::cout << "error in creation socket" << std::endl;
         return(1);
     }
-    struct sockaddr_in s;
-    s.sin_family = AF_INET;
-    s.sin_port = htons(PORT);
-    s.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(serv_fd, (struct sockaddr_in *)&s, sizeof(s)) < 0)
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(serv_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         std::cout << "bind error" << std::endl;
+        close(serv_fd);
         return(1);
     }
+    if (listen(serv_fd, 10) < 0)
+    {
+        std::cout << "listen error" << std::endl;
+        close(serv_fd);
+        return(1);
+    }
+    while (1)
+    {
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int client_fd = accept(serv_fd, (sockaddr *)&client_addr, &client_len);
+        if (client_fd < 0)
+        {
+            std::cerr << "accept error\n";
+            continue;
+        }
+        const char *response = 
+        "HTTP/1.1 200 OK\r\n"  // Codice di stato HTTP
+        "Content-Type: text/html\r\n"  // Tipo di contenuto
+        "Connection: close\r\n"  // Connessione chiusa dopo la risposta
+        "\r\n"  // Linea vuota tra gli header e il corpo
+        "<html><body><h1>Hello, World!</h1></body></html>\n";  // Corpo HTML della risposta
+
+        send(client_fd, response, strlen(response), 0);
+        close(client_fd);
+    }
+    close(serv_fd);
     return(0);
 }
