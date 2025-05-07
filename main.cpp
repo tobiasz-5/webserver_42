@@ -9,28 +9,37 @@
 
 int main()
 {
+    //create server socket
     int serv_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (serv_fd < 0)
     {
         std::cout << "error in creation socket" << std::endl;
         return(1);
     }
+
+    //creo struttura per dati dedl server
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    //lega il socket creato all'indirizzo IP e alla porta specificati
     if (bind(serv_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         std::cout << "bind error" << std::endl;
         close(serv_fd);
         return(1);
     }
+
+    //ascolto connessioni
     if (listen(serv_fd, 10) < 0)
     {
         std::cout << "listen error" << std::endl;
         close(serv_fd);
         return(1);
     }
+
+    //loop che attende connessione del client
     while (1)
     {
         struct sockaddr_in client_addr;
@@ -41,6 +50,7 @@ int main()
             std::cerr << "accept error\n";
             continue;
         }
+        
         const char *response = 
         "HTTP/1.1 200 OK\r\n"  // Codice di stato HTTP
         "Content-Type: text/html\r\n"  // Tipo di contenuto
