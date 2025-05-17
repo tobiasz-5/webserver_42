@@ -1,5 +1,6 @@
 
 #include "Server.hpp"
+#include "Client.hpp"
 
 int main()
 {
@@ -7,37 +8,66 @@ int main()
     {
         Server server;
         server.bind_listen();
+
+        std::map<int, Client> client;
+        int fdmax = server.getServfd();
+        fd_set fds;
+        fd_set temp_fds;
+        FD_ZERO(&fds);                 // svuota il set
+        FD_SET(server.getServfd(), &fds);      // aggiunge il socket del server
         //loop che attende connessione del client
         while (1)
         {
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-
-            std::cout << "Waiting for connection:\n" << "\n" << std::endl;
-
-            int client_fd = accept(server.getServfd(), (sockaddr *)&client_addr, &client_len);
-            if (client_fd < 0)
+            temp_fds = fds;           // copia il set perchè select lo modifica
+            if (select(fdmax + 1, &temp_fds, nullptr, nullptr, nullptr) == -1) //controlla fino a fdmax se c'è fd pronti
             {
-                std::cerr << "accept error\n";
-                continue;
+                std::cerr << "Error in select()" << std::endl;
+                break;
             }
-            
-            char buffer[2048];
-            int bytes_read = recv(client_fd, buffer, 1024, 0); //legge 1024 byte dal socket e li mette in buffer
-            if (bytes_read > 0)
+            for (int i = 0; i <= fdmax; ++i)
             {
-                buffer[bytes_read] = '\0'; //mette terminatore nullo dopo ultimo byte
-                std::cout << "Richiesta del client:\n" << buffer << "\n" << std::endl; //stampa su terminale la richiesta del browser
-
-                const char *response = 
-                "HTTP/1.1 200 OK\r\n"  // Codice di stato HTTP
-                "Content-Type: text/html\r\n"  // Tipo di contenuto
-                "Connection: keep-alive\r\n"  // Connessione chiusa dopo la risposta
-                "\r\n"  // Linea vuota tra gli header e il corpo
-                "<html><body><h1>I am server</h1></body></html>\n";  // Corpo HTML della risposta
-        
-                send(client_fd, response, strlen(response), 0);
-                //close(client_fd);
+                if (i == server.getServfd())
+                {
+                    // Nuova connessione in arrivo
+                    sockaddr_in client_addr;
+                    socklen_t len = sizeof(client_addr);
+                    int client_fd = accept(server.getServfd(), (sockaddr*)&client_addr, &len);
+                    if (client_fd != -1)
+                    {
+                        client.emplace(client_fd, Client(client_fd, client_addr));
+                        FD_SET(client_fd, &fds); // Aggiunge il nuovo client al set master
+                        if (client_fd > fdmax)
+                            fdmax = client_fd; // Aggiorna il valore massimo di file descriptor
+                        std::cout << "New client: fd = " << client_fd << std::endl;
+                    }
+                }
+                else
+                {
+                    // Dati ricevuti da un client esistente
+                    char buffer[2048];
+                    int bytes_read = recv(i, buffer, sizeof(buffer) - 1, 0); // Riceve i dati dal client
+                    if (bytes_read <= 0)
+                    {
+                        // Il client ha chiuso la connessione o si è verificato un errore
+                        std::cout << "Client disconnesso: fd = " << i << std::endl;
+                        close(i); // Chiude il socket del client
+                        FD_CLR(i, &fds); // Rimuove il client dal set master
+                        client.erase(i); // Rimuove il client dal vettore
+                    }
+                    else
+                    {
+                        buffer[bytes_read] = '\0'; // Aggiunge il terminatore di stringa
+                        std::cout << "Richiesta ricevuta da fd = " << i << ":\n" << buffer << std::endl;
+                        // Prepara la risposta HTTP
+                        const char *response =
+                              "HTTP/1.1 200 OK\r\n"
+                                "Content-Type: text/html\r\n"
+                                "Connection: keep-alive\r\n"
+                                "\r\n"
+                                "<html><body><h1>I am server</h1></body></html>\n";
+                        send(i, response, strlen(response), 0); // Invia la risposta al client
+                    }
+                }
             }
         }
         close(server.getServfd());
