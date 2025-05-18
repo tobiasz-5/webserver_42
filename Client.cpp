@@ -18,6 +18,7 @@ Client &Client::operator=(Client const &other)
 {
 	this->fd = other.fd;
     this->addr = other.addr;
+    this->request = other.request;
 	return (*this);
 }
 
@@ -35,12 +36,7 @@ const struct sockaddr_in &Client::getStructaddr() const
     return(addr);
 }
 
-const int &Client::getRequest() const
-{
-    return(fd);
-}
-
-int Client::receiveRequest(int fd)
+int Client::receiveRequest()
 {
     return(request.receiveData(fd));
 }

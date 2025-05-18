@@ -46,7 +46,7 @@ int main()
 				}
 				else
 				{
-					if (client.at(i).receiveRequest(i) <= 0)
+					if (client.at(i).receiveRequest() <= 0)
 					{
 						// Il client ha chiuso la connessione o si è verificato un errore
 						std::cout << "Client disconnesso: fd = " << i << std::endl;

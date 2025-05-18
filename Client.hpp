@@ -23,6 +23,5 @@ class Client
         ~Client();
         const int &getClientfd(void) const;
         const struct sockaddr_in &getStructaddr(void) const;
-        const int &getRequest(void) const;
-        int receiveRequest(int fd);
+        int receiveRequest();
 };
