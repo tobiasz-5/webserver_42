@@ -11,15 +11,14 @@ int main()
 
         std::map<int, Client> client;
         int fdmax = server.getServfd();
-        fd_set fds;
-        fd_set temp_fds;
+        fd_set fds, temp_fds;
         FD_ZERO(&fds);                 // svuota il set
         FD_SET(server.getServfd(), &fds);      // aggiunge il socket del server
         //loop che attende connessione del client
         while (1)
         {
             temp_fds = fds;           // copia il set perchè select lo modifica
-            if (select(fdmax + 1, &temp_fds, nullptr, nullptr, nullptr) == -1) //controlla fino a fdmax se c'è fd pronti
+            if (select(fdmax + 1, &temp_fds, NULL, NULL, NULL) == -1) //controlla fino a fdmax se c'è fd pronti
             {
                 std::cerr << "Error in select()" << std::endl;
                 break;
@@ -32,9 +31,14 @@ int main()
                     sockaddr_in client_addr;
                     socklen_t len = sizeof(client_addr);
                     int client_fd = accept(server.getServfd(), (sockaddr*)&client_addr, &len);
-                    if (client_fd != -1)
+                    if (client_fd == -1)
                     {
-                        client.emplace(client_fd, Client(client_fd, client_addr));
+                        std::cerr << "Errore in accept(): " << std::endl;
+                        continue;
+                    }
+                    else
+                    {
+                        client.insert(std::make_pair(client_fd, Client(client_fd, client_addr)));
                         FD_SET(client_fd, &fds); // Aggiunge il nuovo client al set master
                         if (client_fd > fdmax)
                             fdmax = client_fd; // Aggiorna il valore massimo di file descriptor
@@ -70,6 +74,7 @@ int main()
                 }
             }
         }
+        //std::iterator
         close(server.getServfd());
     }
     catch (const std::exception &e)
