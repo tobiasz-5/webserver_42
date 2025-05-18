@@ -34,3 +34,13 @@ const struct sockaddr_in &Client::getStructaddr() const
 {
     return(addr);
 }
+
+const int &Client::getRequest() const
+{
+    return(fd);
+}
+
+int Client::receiveRequest(int fd)
+{
+    return(request.receiveData(fd));
+}
