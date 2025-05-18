@@ -3,12 +3,10 @@
 
 Server::Server()
 {
-    //create server socket
-    serv_fd = socket(AF_INET, SOCK_STREAM, 0);
+    serv_fd = socket(AF_INET, SOCK_STREAM, 0);   //create server socket
     if (serv_fd < 0)
         throw ServerCreationException();
-    //dati del server messi dentro struct
-    server_addr.sin_family = AF_INET;
+    server_addr.sin_family = AF_INET;           //dati del server messi dentro struct
     server_addr.sin_port = htons(PORT);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     //std::cout << server_addr.sin_family << " - " << server_addr.sin_port << " - " << server_addr.sin_addr.s_addr << std::endl;
@@ -42,15 +40,13 @@ const struct sockaddr_in &Server::getStructaddr() const
 
 void Server::bind_listen(void)
 {
-    //lega il socket creato all'indirizzo IP e alla porta specificati
-    if (bind(serv_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    if (bind(serv_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)     //lega il socket creato all'indirizzo IP e alla porta specificati
     {
         std::cout << "bind error" << std::endl;
         close(serv_fd);
         throw ServerCreationException();
     }
-    //ascolto connessioni
-    if (listen(serv_fd, 10) < 0)
+    if (listen(serv_fd, 10) < 0)    //ascolto connessioni
     {
         std::cout << "listen error" << std::endl;
         close(serv_fd);

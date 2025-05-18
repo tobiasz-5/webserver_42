@@ -2,6 +2,35 @@
 #include "Server.hpp"
 #include "Client.hpp"
 
+int addClient(const Server &server, std::map<int, Client> &client, int &fdmax, fd_set &fds)  // New connection for client
+{
+	sockaddr_in client_addr;
+	socklen_t len = sizeof(client_addr);
+	int client_fd = accept(server.getServfd(), (sockaddr*)&client_addr, &len);
+	if (client_fd == -1)
+	{
+		std::cerr << "Errore in accept(): " << std::endl;
+		return(-1);
+	}
+	else
+	{
+		client.insert(std::make_pair(client_fd, Client(client_fd, client_addr)));
+		FD_SET(client_fd, &fds); // Aggiunge il nuovo client al set master
+		if (client_fd > fdmax)
+			fdmax = client_fd; // Aggiorna il valore massimo di file descriptor
+		std::cout << "New client: fd = " << client_fd << " PORT " << ntohs(client_addr.sin_port) << std::endl;
+	}
+	return(0);
+}
+
+void disconnectClient(int i, fd_set &fds, std::map<int, Client> &client) // Il client ha chiuso la connessione o si è verificato un errore
+{
+	std::cout << "Client disconnected: fd = " << i << std::endl;
+	close(i); // Chiude il socket del client
+	FD_CLR(i, &fds); // Rimuove il client dal set master
+	client.erase(i); // Rimuove il client dal vettore
+}
+
 int main()
 {
 	try
@@ -24,36 +53,17 @@ int main()
 			}
 			for (int i = 0; i <= fdmax; ++i)
 			{
+				if (!FD_ISSET(i, &temp_fds))    // verify if fd is ready
+					continue; 					// salta i fd non pronti
 				if (i == server.getServfd())
 				{
-					// Nuova connessione in arrivo
-					sockaddr_in client_addr;
-					socklen_t len = sizeof(client_addr);
-					int client_fd = accept(server.getServfd(), (sockaddr*)&client_addr, &len);
-					if (client_fd == -1)
-					{
-						std::cerr << "Errore in accept(): " << std::endl;
+					if (addClient(server, client, fdmax, fds) < 0)
 						continue;
-					}
-					else
-					{
-						client.insert(std::make_pair(client_fd, Client(client_fd, client_addr)));
-						FD_SET(client_fd, &fds); // Aggiunge il nuovo client al set master
-						if (client_fd > fdmax)
-							fdmax = client_fd; // Aggiorna il valore massimo di file descriptor
-						std::cout << "New client: fd = " << client_fd << std::endl;
-					}
 				}
 				else
 				{
 					if (client.at(i).receiveRequest() <= 0)
-					{
-						// Il client ha chiuso la connessione o si è verificato un errore
-						std::cout << "Client disconnesso: fd = " << i << std::endl;
-						close(i); // Chiude il socket del client
-						FD_CLR(i, &fds); // Rimuove il client dal set master
-						client.erase(i); // Rimuove il client dal vettore
-					}
+						disconnectClient(i, fds, client);
 					else
 					{
 						std::cout << "Richiesta ricevuta da fd = " << i << std::endl;
@@ -70,9 +80,9 @@ int main()
 			}
 		}
 		std::map<int, Client>::iterator it = client.begin();
-		for (; it != client.end(); it++)
+		for (; it != client.end(); it++)  //close all client file descriptor
 			close(it->first);
-		close(server.getServfd());
+		close(server.getServfd());    // close server file descriptor
 	}
 	catch (const std::exception &e)
 	{
