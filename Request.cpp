@@ -34,6 +34,8 @@ int Request::receiveData(int fd)
     {
         temp_buffer[bytes_read] = '\0'; // terminatore stringa
         buffer.assign(temp_buffer, bytes_read);  // aggiorno buffer membro
+
+        std::cout << buffer << std::endl; //debug
     }
     else
         buffer.clear(); // se errore o chiusura connessione, svuoto il buffer
