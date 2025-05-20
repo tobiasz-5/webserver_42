@@ -5,7 +5,7 @@ OBJS = $(SRCS:.cpp=.o)
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
-NAME = server
+NAME = webserv
 
 all: $(NAME)
 
