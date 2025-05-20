@@ -31,6 +31,19 @@ void disconnectClient(int i, fd_set &fds, std::map<int, Client> &client) // Il c
 	client.erase(i); // Rimuove il client dal vettore
 }
 
+const char *Response(int i)  //temporary function
+{
+	std::cout << "request received from fd = " << i << std::endl;
+	// Prepara la risposta HTTP
+	const char *response =
+		"HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/html\r\n"
+		"Connection: keep-alive\r\n"
+		"\r\n"
+		"<html><body><h1>I am server</h1></body></html>\n";
+	return(response);
+}
+
 int main()
 {
 	try
@@ -66,14 +79,7 @@ int main()
 						disconnectClient(i, fds, client);
 					else
 					{
-						std::cout << "Richiesta ricevuta da fd = " << i << std::endl;
-						// Prepara la risposta HTTP
-						const char *response =
-							  "HTTP/1.1 200 OK\r\n"
-								"Content-Type: text/html\r\n"
-								"Connection: keep-alive\r\n"
-								"\r\n"
-								"<html><body><h1>I am server</h1></body></html>\n";
+						const char *response = Response(i);
 						send(i, response, strlen(response), 0); // Invia la risposta al client
 					}
 				}
