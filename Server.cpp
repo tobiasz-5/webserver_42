@@ -10,6 +10,7 @@ Server::Server()
     server_addr.sin_port = htons(PORT);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     //std::cout << server_addr.sin_family << " - " << server_addr.sin_port << " - " << server_addr.sin_addr.s_addr << std::endl;
+    std::cout << "Server created " << serv_fd << std::endl;
 }
 
 Server::Server(Server const &other)

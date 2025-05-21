@@ -22,6 +22,7 @@ int addClient(const Server &server, std::map<int, Client> &client, std::vector<p
     client_pollfd.events = POLLIN;
     fds.push_back(client_pollfd);
 	client.insert(std::make_pair(client_fd, Client(client_fd, client_addr)));
+
 	std::cout << "New client: fd = " << client_fd << " PORT " << ntohs(client_addr.sin_port) << std::endl;
 	return(0);
 }
@@ -72,30 +73,51 @@ int main()
 				std::cerr << " poll failed " << std::endl;
 				break;
    			}
-			std::vector<pollfd>::iterator it = fds.begin();
-			for (; it != fds.end();)
+			std::vector<pollfd> temp_fds = fds;
+
+			//std::vector<pollfd>::iterator it = = fds.begin();
+			std::cout << "fds size: " << fds.size() << std::endl;
+			std::cout << "temp_fds size: " << temp_fds.size() << std::endl;
+
+			for (std::vector<pollfd>::iterator it = temp_fds.begin(); it != temp_fds.end();)
 			{
+				std::cout << "iterator fd: " << it->fd << std::endl;
+				std::cout << "pollfd: " << (*it).fd << std::endl;
+				
+				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
+				{
+					std::cout << "Client disconnected or error: fd = " << it->fd << std::endl;
+					it = disconnectClient(it, fds, client);
+					continue;
+				}
+
 				if (it->revents & POLLIN)
 				{
+					std::cout << "iterator fd: " << it->fd << std::endl;
 					if (it->fd == server.getServfd())
 					{
 						addClient(server, client, fds);
-						it++;
+						++it;
 					}
 					else
 					{
+						//std::cout << "iterator fd: " << it->fd << std::endl;
+						
 						if (client.at(it->fd).receiveRequest() <= 0)
+						{
 							it = disconnectClient(it, fds, client);
+							//--it;
+						}
 						else
 						{
 							const char *response = Response(it->fd);
 							send(it->fd, response, strlen(response), 0); // Invia la risposta al client
-							it++;
+							++it;
 						}
 					}
 				}
 				else
-					it++;
+					++it;
 			}
 		}
 		std::map<int, Client>::iterator it = client.begin();

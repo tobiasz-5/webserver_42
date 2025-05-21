@@ -33,11 +33,18 @@ int Request::receiveData(int fd)
     if (bytes_read > 0)
     {
         temp_buffer[bytes_read] = '\0'; // terminatore stringa
-        buffer.assign(temp_buffer, bytes_read);  // aggiorno buffer membro
+        buffer.append(temp_buffer, bytes_read);
+        //buffer.assign(temp_buffer, bytes_read);  // aggiorno buffer membro
 
-        std::cout << buffer << std::endl; //debug
+        std::cout << "buffer :" << buffer << std::endl; //debug
+    }
+    else if (bytes_read == 0)
+    {
+        std::cout << "Client closed connection." << std::endl;
+        return 0;
     }
     else
         buffer.clear(); // se errore o chiusura connessione, svuoto il buffer
+    std::cout << "byte read :" << bytes_read << std::endl; //debug
     return (bytes_read);
 }
