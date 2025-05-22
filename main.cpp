@@ -27,13 +27,14 @@ int addClient(const Server &server, std::map<int, Client> &client, std::vector<p
 	return(0);
 }
 
-std::vector<pollfd>::iterator disconnectClient(std::vector<pollfd>::iterator it, std::vector<pollfd> &fds, std::map<int, Client> &client) // Il client ha chiuso la connessione o si è verificato un errore
+std::vector<pollfd>::iterator disconnectClient(std::vector<pollfd>::iterator it, std::vector<pollfd> &temp_fds, std::vector<pollfd> &fds, std::map<int, Client> &client) // Il client ha chiuso la connessione o si è verificato un errore
 {
 	std::cout << "Client disconnected: fd = " << it->fd << std::endl;
 	close(it->fd);
 	client.erase(it->fd); // Rimuove il client dal vettore
-	//it = fds.erase(it); // Rimuove fd del client dal vector di poll
-	return(fds.erase(it));
+	fds.erase(it); // Rimuove fd del client dal vector di poll
+	it = temp_fds.erase(it); // Rimuove fd del client dal vector di poll
+	return(it);
 }
 
 const char *Response(int fd)  //temporary function
@@ -74,23 +75,14 @@ int main()
 				break;
    			}
 			std::vector<pollfd> temp_fds = fds;
-
-			//std::vector<pollfd>::iterator it = = fds.begin();
-			std::cout << "fds size: " << fds.size() << std::endl;
-			std::cout << "temp_fds size: " << temp_fds.size() << std::endl;
-
 			for (std::vector<pollfd>::iterator it = temp_fds.begin(); it != temp_fds.end();)
 			{
-				std::cout << "iterator fd: " << it->fd << std::endl;
-				std::cout << "pollfd: " << (*it).fd << std::endl;
-				
 				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
 				{
 					std::cout << "Client disconnected or error: fd = " << it->fd << std::endl;
-					it = disconnectClient(it, fds, client);
+					it = disconnectClient(it, temp_fds, fds, client);
 					continue;
 				}
-
 				if (it->revents & POLLIN)
 				{
 					std::cout << "iterator fd: " << it->fd << std::endl;
@@ -101,12 +93,10 @@ int main()
 					}
 					else
 					{
-						//std::cout << "iterator fd: " << it->fd << std::endl;
-						
 						if (client.at(it->fd).receiveRequest() <= 0)
 						{
-							it = disconnectClient(it, fds, client);
-							//--it;
+							it = disconnectClient(it, temp_fds, fds, client);
+							continue;
 						}
 						else
 						{

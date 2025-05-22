@@ -47,6 +47,7 @@ void Server::bind_listen(void)
         close(serv_fd);
         throw ServerCreationException();
     }
+    fcntl(serv_fd, F_SETFL, O_NONBLOCK); //server fd non blocking
     if (listen(serv_fd, 10) < 0)    //ascolto connessioni
     {
         std::cout << "listen error" << std::endl;
