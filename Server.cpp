@@ -3,14 +3,31 @@
 
 Server::Server()
 {
-    serv_fd = socket(AF_INET, SOCK_STREAM, 0);   //create server socket
-    if (serv_fd < 0)
-        throw ServerCreationException();
-    server_addr.sin_family = AF_INET;           //dati del server messi dentro struct
-    server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    //std::cout << server_addr.sin_family << " - " << server_addr.sin_port << " - " << server_addr.sin_addr.s_addr << std::endl;
-    std::cout << "Server created " << serv_fd << std::endl;
+    num_port = 2;
+    serv_fds.reserve(num_port);
+    server_addr.reserve(num_port);
+    ports.push_back(PORT);
+    ports.push_back(PORT2);
+
+
+    for (size_t i = 0; i < ports.size(); ++i)
+    {
+        int fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (fd < 0)
+            throw ServerCreationException();
+        fcntl(fd, F_SETFL, O_NONBLOCK);  // rendi il socket non-bloccante
+        serv_fds.push_back(fd);  // aggiungi il fd al vector
+
+        sockaddr_in addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(ports.at(i));
+        addr.sin_addr.s_addr = INADDR_ANY;
+        server_addr.push_back(addr);  // aggiungi struct addr
+    }
+    std::cout << "Server sockets created for ports:";
+    for (size_t i = 0; i < ports.size(); ++i)
+        std::cout << " " << ports.at(i) << std::endl;
 }
 
 Server::Server(Server const &other)
@@ -20,8 +37,10 @@ Server::Server(Server const &other)
 
 Server &Server::operator=(Server const &other)
 {
-	this->serv_fd = other.serv_fd;
+	this->serv_fds = other.serv_fds;
     this->server_addr = other.server_addr;
+    this->ports = other.ports;
+    this->num_port = other.num_port;
 	return (*this);
 }
 
@@ -29,30 +48,43 @@ Server::~Server()
 {
 }
 
-const int &Server::getServfd() const
+size_t Server::getnumport(void) const
 {
-    return(serv_fd);
+    return(static_cast<size_t>(num_port));
 }
 
-const struct sockaddr_in &Server::getStructaddr() const
+const int &Server::getServfd(int i) const
 {
-    return(server_addr);
+    return(serv_fds.at(i));
+}
+
+const struct sockaddr_in &Server::getStructaddr(int i) const
+{
+    return(server_addr.at(i));
+}
+
+bool Server::isServerFd(int fd) const
+{
+    return std::find(serv_fds.begin(), serv_fds.end(), fd) != serv_fds.end();
 }
 
 void Server::bind_listen(void)
 {
-    if (bind(serv_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)     //lega il socket creato all'indirizzo IP e alla porta specificati
+    for (size_t i = 0; i < ports.size(); ++i)
     {
-        std::cout << "bind error" << std::endl;
-        close(serv_fd);
-        throw ServerCreationException();
-    }
-    fcntl(serv_fd, F_SETFL, O_NONBLOCK); //server fd non blocking
-    if (listen(serv_fd, 10) < 0)    //ascolto connessioni
-    {
-        std::cout << "listen error" << std::endl;
-        close(serv_fd);
-        throw ServerCreationException();
+        if (bind(serv_fds.at(i), (struct sockaddr *)&server_addr.at(i), sizeof(server_addr.at(i))) < 0)     //lega il socket creato all'indirizzo IP e alla porta specificati
+        {
+            std::cout << "bind error" << std::endl;
+            close(serv_fds.at(i));
+            throw ServerCreationException();
+        }
+        fcntl(serv_fds.at(i), F_SETFL, O_NONBLOCK); //server fd non blocking
+        if (listen(serv_fds.at(i), 10) < 0)    //ascolto connessioni
+        {
+            std::cout << "listen error" << std::endl;
+            close(serv_fds.at(i));
+            throw ServerCreationException();
+        }
     }
     return;
 }

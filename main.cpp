@@ -8,11 +8,11 @@
 
 #define MAX_CLIENT 1024
 
-int addClient(const Server &server, std::map<int, Client> &client, std::vector<pollfd> &fds)  // New connection for client
+int addClient(int server_fd, std::map<int, Client> &client, std::vector<pollfd> &fds)  // New connection for client
 {
 	sockaddr_in client_addr;
 	socklen_t len = sizeof(client_addr);
-	int client_fd = accept(server.getServfd(), (sockaddr*)&client_addr, &len);
+	int client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
 	if (client_fd == -1)
 	{
 		std::cerr << "Error in accept: " << std::endl;
@@ -62,12 +62,16 @@ int main()
 
 		std::vector<pollfd> fds;
 		fds.reserve(MAX_CLIENT);
-		// Aggiunta del server socket
-		pollfd server_pollfd;
-		server_pollfd.fd = server.getServfd();
-		server_pollfd.events = POLLIN;
-		fds.push_back(server_pollfd);
 
+		// Aggiunta del server socket
+		for (size_t i = 0; i < server.getnumport(); ++i)
+    	{
+			pollfd server_pollfd;
+			server_pollfd.fd = server.getServfd(i);
+			server_pollfd.events = POLLIN;
+			fds.push_back(server_pollfd);
+    	}
+		//std::cout << " morto " << std::endl;
 		while (1)  //loop che attende connessioni e richieste client
 		{
 			int ret = poll(fds.data(), fds.size(), -1);
@@ -88,9 +92,9 @@ int main()
 				if (it->revents & POLLIN)
 				{
 					//std::cout << "iterator fd: " << it->fd << std::endl;
-					if (it->fd == server.getServfd())
+					if (server.isServerFd(it->fd))
 					{
-						addClient(server, client, fds);
+						addClient(it->fd, client, fds);
 						++it;
 					}
 					else
@@ -115,7 +119,8 @@ int main()
 		std::map<int, Client>::iterator it = client.begin();
 		for (; it != client.end(); it++)  //close all client file descriptor
 			close(it->first);
-		close(server.getServfd());    // close server file descriptor
+		for (size_t i = 0; i < server.getnumport(); ++i)
+			close(server.getServfd(i));
 	}
 	catch (const std::exception &e)
 	{

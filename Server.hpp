@@ -1,6 +1,7 @@
 #pragma once
 
 #define PORT 8080
+#define PORT2 8001
 
 #include <iostream>
 #include <sys/socket.h>
@@ -9,12 +10,17 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <vector>
+#include <cstring>
+#include <algorithm>
 
 class Server
 {
     private:
-        int serv_fd;
-        struct sockaddr_in server_addr;
+        int num_port;  //dati presi da config file
+        std::vector<int> serv_fds;
+        std::vector<sockaddr_in> server_addr;
+        std::vector<int> ports;  //dati presi da config file
     public:
         Server();
         Server(Server const &other);
@@ -28,7 +34,9 @@ class Server
 					return ("Server init error");
 				}
 		};
-        const int &getServfd(void) const;
-        const struct sockaddr_in &getStructaddr(void) const;
+        const int &getServfd(int i) const;
+        const struct sockaddr_in &getStructaddr(int i) const;
+        size_t getnumport(void) const;
+        bool isServerFd(int fd) const;
         void bind_listen(void);
 };
