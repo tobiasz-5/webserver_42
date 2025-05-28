@@ -6,6 +6,8 @@
 #include <vector>
 #include <fcntl.h>
 
+#define MAX_CLIENT 1024
+
 int addClient(const Server &server, std::map<int, Client> &client, std::vector<pollfd> &fds)  // New connection for client
 {
 	sockaddr_in client_addr;
@@ -27,13 +29,12 @@ int addClient(const Server &server, std::map<int, Client> &client, std::vector<p
 	return(0);
 }
 
-std::vector<pollfd>::iterator disconnectClient(std::vector<pollfd>::iterator it, std::vector<pollfd> &temp_fds, std::vector<pollfd> &fds, std::map<int, Client> &client) // Il client ha chiuso la connessione o si è verificato un errore
+std::vector<pollfd>::iterator disconnectClient(std::vector<pollfd>::iterator it, std::vector<pollfd> &fds, std::map<int, Client> &client) // Il client ha chiuso la connessione o si è verificato un errore
 {
 	std::cout << "Client disconnected: fd = " << it->fd << std::endl;
 	close(it->fd);
 	client.erase(it->fd); // Rimuove il client dal vettore
-	fds.erase(it); // Rimuove fd del client dal vector di poll
-	it = temp_fds.erase(it); // Rimuove fd del client dal vector di poll
+	it = fds.erase(it); // Rimuove fd del client dal vector di poll
 	return(it);
 }
 
@@ -60,6 +61,7 @@ int main()
 		std::map<int, Client> client;
 
 		std::vector<pollfd> fds;
+		fds.reserve(MAX_CLIENT);
 		// Aggiunta del server socket
 		pollfd server_pollfd;
 		server_pollfd.fd = server.getServfd();
@@ -74,13 +76,13 @@ int main()
 				std::cerr << " poll failed " << std::endl;
 				break;
    			}
-			std::vector<pollfd> temp_fds = fds;
-			for (std::vector<pollfd>::iterator it = temp_fds.begin(); it != temp_fds.end();)
+			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end();)
 			{
+				std::cout << " fd current " <<it->fd << std::endl;
 				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
 				{
 					std::cout << "Client disconnected or error: fd = " << it->fd << std::endl;
-					it = disconnectClient(it, temp_fds, fds, client);
+					it = disconnectClient(it, fds, client);
 					continue;
 				}
 				if (it->revents & POLLIN)
@@ -95,7 +97,7 @@ int main()
 					{
 						if (client.at(it->fd).receiveRequest() <= 0)
 						{
-							it = disconnectClient(it, temp_fds, fds, client);
+							it = disconnectClient(it, fds, client);
 							continue;
 						}
 						else
