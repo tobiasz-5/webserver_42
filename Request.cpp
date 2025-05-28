@@ -36,7 +36,7 @@ int Request::receiveData(int fd)
         buffer.append(temp_buffer, bytes_read);
         //buffer.assign(temp_buffer, bytes_read);  // aggiorno buffer membro
 
-        std::cout << "buffer :" << buffer << std::endl; //debug
+        std::cout << "request :\n" << buffer << std::endl; //debug
     }
     else if (bytes_read == 0)
     {

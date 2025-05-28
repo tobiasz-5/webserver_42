@@ -40,7 +40,7 @@ std::vector<pollfd>::iterator disconnectClient(std::vector<pollfd>::iterator it,
 
 const char *Response(int fd)  //temporary function
 {
-	std::cout << "request received from fd = " << fd << std::endl;
+	std::cout << "response to request from fd = " << fd << std::endl;
 	// Prepara la risposta HTTP
 	const char *response =
 		"HTTP/1.1 200 OK\r\n"
@@ -78,7 +78,7 @@ int main()
    			}
 			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end();)
 			{
-				std::cout << " fd current " <<it->fd << std::endl;
+				//std::cout << " fd current " <<it->fd << std::endl;
 				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
 				{
 					std::cout << "Client disconnected or error: fd = " << it->fd << std::endl;
@@ -87,7 +87,7 @@ int main()
 				}
 				if (it->revents & POLLIN)
 				{
-					std::cout << "iterator fd: " << it->fd << std::endl;
+					//std::cout << "iterator fd: " << it->fd << std::endl;
 					if (it->fd == server.getServfd())
 					{
 						addClient(server, client, fds);
