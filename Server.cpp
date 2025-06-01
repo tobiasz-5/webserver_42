@@ -1,14 +1,12 @@
 
 #include "Server.hpp"
+#include "config.hpp"
 
-Server::Server()
+Server::Server(const struct config &config)
 {
-    num_port = 2;
-    serv_fds.reserve(num_port);
-    server_addr.reserve(num_port);
-    ports.push_back(PORT);
-    ports.push_back(PORT2);
-
+    ports = config.ports;
+    serv_fds.reserve(config.ports.size());
+    server_addr.reserve(config.ports.size());
 
     for (size_t i = 0; i < ports.size(); ++i)
     {
@@ -40,17 +38,19 @@ Server &Server::operator=(Server const &other)
 	this->serv_fds = other.serv_fds;
     this->server_addr = other.server_addr;
     this->ports = other.ports;
-    this->num_port = other.num_port;
 	return (*this);
 }
 
 Server::~Server()
 {
+    for (size_t i = 0; i < serv_fds.size(); ++i)
+	    close(serv_fds.at(i));
+    std::cout << "Closing all server fd" << std::endl;
 }
 
 size_t Server::getnumport(void) const
 {
-    return(static_cast<size_t>(num_port));
+    return(static_cast<size_t>(ports.size()));
 }
 
 const int &Server::getServfd(int i) const

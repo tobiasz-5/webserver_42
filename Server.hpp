@@ -1,8 +1,5 @@
 #pragma once
 
-#define PORT 8080
-#define PORT2 8001
-
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -14,15 +11,17 @@
 #include <cstring>
 #include <algorithm>
 
+class config;
+
 class Server
 {
     private:
-        int num_port;  //dati presi da config file
+        std::vector<int> ports;
         std::vector<int> serv_fds;
         std::vector<sockaddr_in> server_addr;
-        std::vector<int> ports;  //dati presi da config file
     public:
-        Server();
+        //Server();
+        Server(const struct config &config);
         Server(Server const &other);
 		Server &operator=(Server const &other);
         ~Server();

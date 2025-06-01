@@ -1,4 +1,6 @@
 
+
+#include "config.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
 
@@ -7,6 +9,9 @@
 #include <fcntl.h>
 
 #define MAX_CLIENT 1024
+
+
+#define SERVER_NUM 3
 
 int addClient(int server_fd, std::map<int, Client> &client, std::vector<pollfd> &fds)  // New connection for client
 {
@@ -51,28 +56,43 @@ const char *Response(int fd)  //temporary function
 	return(response);
 }
 
+bool isAnyServerFd(const std::vector<Server> &servers, int fd)
+{
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+        if (servers[i].isServerFd(fd))
+            return true;
+    }
+    return false;
+}
+
 int main()
 {
 	try
 	{
-		Server server;
-		server.bind_listen();
+		std::vector<config> conf;
+		fill_configstruct(conf);
+
+		std::vector<Server> serv;
+		create_server_from_config(serv, conf);
 
 		std::map<int, Client> client;
-
 		std::vector<pollfd> fds;
 		fds.reserve(MAX_CLIENT);
 
-		// Aggiunta del server socket
-		for (size_t i = 0; i < server.getnumport(); ++i)
-    	{
-			pollfd server_pollfd;
-			server_pollfd.fd = server.getServfd(i);
-			server_pollfd.events = POLLIN;
-			fds.push_back(server_pollfd);
-    	}
-		//std::cout << " morto " << std::endl;
-		while (1)  //loop che attende connessioni e richieste client
+		// Aggiunta di tutti gli fd di tutti i server alla struttura pollfd
+		for (size_t s = 0; s < serv.size(); ++s)
+		{
+			for (size_t i = 0; i < serv[s].getnumport(); ++i)
+			{
+				pollfd server_pollfd;
+				server_pollfd.fd = serv[s].getServfd(i);
+				server_pollfd.events = POLLIN;
+				fds.push_back(server_pollfd);
+			}
+		}
+		//loop principale che attende connessioni e richieste client
+		while (1)  
 		{
 			int ret = poll(fds.data(), fds.size(), -1);
 			if (ret < 0)
@@ -92,7 +112,7 @@ int main()
 				if (it->revents & POLLIN)
 				{
 					//std::cout << "iterator fd: " << it->fd << std::endl;
-					if (server.isServerFd(it->fd))
+					if (isAnyServerFd(serv, it->fd))
 					{
 						addClient(it->fd, client, fds);
 						++it;
@@ -116,11 +136,6 @@ int main()
 					++it;
 			}
 		}
-		std::map<int, Client>::iterator it = client.begin();
-		for (; it != client.end(); it++)  //close all client file descriptor
-			close(it->first);
-		for (size_t i = 0; i < server.getnumport(); ++i)
-			close(server.getServfd(i));
 	}
 	catch (const std::exception &e)
 	{

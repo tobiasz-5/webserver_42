@@ -24,6 +24,7 @@ Client &Client::operator=(Client const &other)
 
 Client::~Client()
 {
+    close(fd);
 }
 
 const int &Client::getClientfd() const
