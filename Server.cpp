@@ -23,9 +23,10 @@ Server::Server(const struct config &config)
         addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.push_back(addr);  // aggiungi struct addr
     }
-    std::cout << "Server sockets created for ports:";
+    std::cout << "Server sockets created for ports:" << std::endl;
     for (size_t i = 0; i < ports.size(); ++i)
-        std::cout << " " << ports.at(i) << std::endl;
+        std::cout << " " << ports.at(i);
+    std::cout << std::endl;
 }
 
 Server::Server(Server const &other)
@@ -43,9 +44,6 @@ Server &Server::operator=(Server const &other)
 
 Server::~Server()
 {
-    for (size_t i = 0; i < serv_fds.size(); ++i)
-	    close(serv_fds.at(i));
-    std::cout << "Closing all server fd" << std::endl;
 }
 
 size_t Server::getnumport(void) const
@@ -87,4 +85,11 @@ void Server::bind_listen(void)
         }
     }
     return;
+}
+
+void Server::closing_fd(void)
+{
+    for (size_t i = 0; i < serv_fds.size(); ++i)
+	    close(serv_fds.at(i));
+    std::cout << "Closing all server fd" << std::endl;
 }

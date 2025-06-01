@@ -38,4 +38,5 @@ class Server
         size_t getnumport(void) const;
         bool isServerFd(int fd) const;
         void bind_listen(void);
+        void closing_fd(void);
 };

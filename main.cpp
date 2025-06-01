@@ -66,6 +66,17 @@ bool isAnyServerFd(const std::vector<Server> &servers, int fd)
     return false;
 }
 
+void close_all_fd(std::vector<Server> &servers, std::map<int, Client> &client)
+{
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+		servers[i].closing_fd();
+    }
+	std::map<int, Client>::iterator it = client.begin();
+	for (; it != client.end(); it++)  //close all client file descriptor
+		close(it->first);
+}
+
 int main()
 {
 	try
@@ -136,6 +147,7 @@ int main()
 					++it;
 			}
 		}
+		close_all_fd(serv, client);
 	}
 	catch (const std::exception &e)
 	{
