@@ -5,6 +5,7 @@
 Server::Server(const struct config &config)
 {
     ports = config.ports;
+    host = config.host;
     serv_fds.reserve(config.ports.size());
     server_addr.reserve(config.ports.size());
 
@@ -20,9 +21,12 @@ Server::Server(const struct config &config)
         std::memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(ports.at(i));
-        addr.sin_addr.s_addr = INADDR_ANY;
+        if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) <= 0)
+            throw ServerCreationException();
+        //addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.push_back(addr);  // aggiungi struct addr
     }
+    //debug message
     std::cout << "Server sockets created for ports:" << std::endl;
     for (size_t i = 0; i < ports.size(); ++i)
         std::cout << " " << ports.at(i);

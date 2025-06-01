@@ -81,13 +81,14 @@ int main()
 {
 	try
 	{
-		std::vector<config> conf;
+		std::vector<config> conf;  //vettore con dati di ogni server, preso da file di config
 		fill_configstruct(conf);
 
-		std::vector<Server> serv;
+		std::vector<Server> serv; //crea vettore di server con dati di config
 		create_server_from_config(serv, conf);
 
 		std::map<int, Client> client;
+
 		std::vector<pollfd> fds;
 		fds.reserve(MAX_CLIENT);
 

@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
@@ -17,6 +18,7 @@ class Server
 {
     private:
         std::vector<int> ports;
+        std::string host;
         std::vector<int> serv_fds;
         std::vector<sockaddr_in> server_addr;
     public:
