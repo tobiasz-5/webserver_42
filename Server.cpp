@@ -23,7 +23,6 @@ Server::Server(const struct config &config)
         addr.sin_port = htons(ports.at(i));
         if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) <= 0)
             throw ServerCreationException();
-        //addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.push_back(addr);  // aggiungi struct addr
     }
     //debug message
