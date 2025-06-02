@@ -10,9 +10,6 @@
 
 #define MAX_CLIENT 1024
 
-
-#define SERVER_NUM 3
-
 int addClient(int server_fd, std::map<int, Client> &client, std::vector<pollfd> &fds)  // New connection for client
 {
 	sockaddr_in client_addr;
