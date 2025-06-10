@@ -34,7 +34,6 @@ int Request::receiveData(int fd)
     {
         temp_buffer[bytes_read] = '\0'; // terminatore stringa
         buffer.append(temp_buffer, bytes_read);
-        //buffer.assign(temp_buffer, bytes_read);  // aggiorno buffer membro
 
         std::cout << "request :\n" << buffer << std::endl; //debug
     }
