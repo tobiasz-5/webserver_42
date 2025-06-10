@@ -74,12 +74,16 @@ void close_all_fd(std::vector<Server> &servers, std::map<int, Client> &client)
 		close(it->first);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	try
 	{
+		if (argc != 2)
+			throw config::ConfigException();
 		std::vector<config> conf;  //vettore con dati di ogni server, preso da file di config
-		fill_configstruct(conf);
+		std::string s(argv[1]);
+		fill_configstruct(conf, s);
+		print_config(conf);
 
 		std::vector<Server> serv; //crea vettore di server con dati di config
 		create_server_from_config(serv, conf);
