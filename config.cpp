@@ -2,18 +2,19 @@
 #include "config.hpp"
 #include "Server.hpp"
 
-// Funzione trim: rimuove spazi iniziali e finali
-static std::string trim(const std::string& s)
+std::string trim_space(const std::string& s) // Funzione trim: rimuove spazi iniziali e finali
 {
     size_t start = 0;
-    while (start < s.size() && std::isspace(s[start])) ++start;
+    while (start < s.size() && std::isspace(s[start]))
+        ++start;
     size_t end = s.size();
-    while (end > start && std::isspace(s[end-1])) --end;
-    return s.substr(start, end - start);
+    while (end > start && std::isspace(s[end-1]))
+        --end;
+    std::string r = s.substr(start, end - start);
+    return r;
 }
 
-// Funzione split: divide una stringa in parole separate da spazi
-static std::vector<std::string> split(const std::string &str)
+std::vector<std::string> divide_words(const std::string &str) // Funzione split: divide una stringa in parole separate da spazi
 {
     std::vector<std::string> tokens;
     std::istringstream iss(str);
@@ -27,24 +28,74 @@ static std::vector<std::string> split(const std::string &str)
     return tokens;
 }
 
-static int toInt(const std::string &s)
+int to_int(const std::string &s)
 {
     int val = 0;
     std::istringstream iss(s);
     iss >> val;
     if (iss.fail())
-        throw std::runtime_error("Conversione a int fallita: " + s);
+        throw std::runtime_error("Conversion to int failed: " + s);
     return val;
 }
 
-static unsigned long toULong(const std::string &s)
+unsigned long to_long(const std::string &s)
 {
     unsigned long val = 0;
     std::istringstream iss(s);
     iss >> val;
     if (iss.fail())
-        throw std::runtime_error("Conversione a unsigned long fallita: " + s);
+        throw std::runtime_error("Conversion to long failed: " + s);
     return val;
+}
+
+void fill_route(Route &current_route, const std::vector<std::string> &tokens)
+{
+    if (tokens[0] == "allowed_methods")
+        current_route.allowed_methods.assign(tokens.begin() + 1, tokens.end());
+    else if (tokens[0] == "directory_listing")
+        current_route.directory_listing = (tokens[1] == "on");
+    else if (tokens[0] == "default_file")
+        current_route.default_file = tokens[1];
+    else if (tokens[0] == "cgi_extension")
+        current_route.cgi_extension = tokens[1];
+    else if (tokens[0] == "cgi_path")
+        current_route.cgi_path = tokens[1];
+    else if (tokens[0] == "upload_path")
+        current_route.upload_path = tokens[1];
+}
+
+void fill_config(config &current_config, const std::vector<std::string> &tokens)
+{
+    if (tokens[0] == "listen")
+    {
+        std::string addr_port = tokens[1];
+        if (!addr_port.empty() && addr_port[addr_port.size() - 1] == ';')
+            addr_port.erase(addr_port.size() - 1);
+        size_t colon_pos = addr_port.find(':');
+        if (colon_pos == std::string::npos)
+        {
+            current_config.listen_address = "0.0.0.0";
+            int port = to_int(addr_port);
+            current_config.ports.push_back(port);
+        }
+        else
+        {
+            current_config.listen_address = addr_port.substr(0, colon_pos);
+            int port = to_int(addr_port.substr(colon_pos + 1));
+            current_config.ports.push_back(port);
+        }
+    }
+    else if (tokens[0] == "server_name")
+        current_config.server_name = tokens[1];
+    else if (tokens[0] == "host")
+        current_config.host = tokens[1];
+    else if (tokens[0] == "max_body_size")
+        current_config.max_body_size = to_long(tokens[1]);
+    else if (tokens[0] == "error_page")
+    {
+        int err = to_int(tokens[1]);
+        current_config.error_pages[err] = tokens[2]; //inserisce nella mappa (se gia presente sovrascrive)
+    }
 }
 
 void fill_configstruct(std::vector<config> &conf, const std::string &filename)
@@ -59,10 +110,10 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
     bool in_location = false;
     while (std::getline(infile, line))
     {
-        line = trim(line);
-        if (line.empty() || line[0] == '#') continue;
-
-        if (line.find("server {") != std::string::npos) //for now
+        line = trim_space(line);
+        if (line.empty() || line[0] == '#')
+            continue;
+        if (line.find("server {") != std::string::npos) //for now, controlla se trova blocco server su linea
         {
             in_server = true;
             current_config = config();
@@ -86,63 +137,17 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
             conf.push_back(current_config);
             continue;
         }
-        std::vector<std::string> tokens = split(line);
+        std::vector<std::string> tokens = divide_words(line);
         if (tokens.empty())
             continue;
         if (in_location)
-        {
-            if (tokens[0] == "allowed_methods")
-                current_route.allowed_methods.assign(tokens.begin() + 1, tokens.end());
-            else if (tokens[0] == "directory_listing")
-                current_route.directory_listing = (tokens[1] == "on");
-            else if (tokens[0] == "default_file")
-                current_route.default_file = tokens[1];
-            else if (tokens[0] == "cgi_extension")
-                current_route.cgi_extension = tokens[1];
-            else if (tokens[0] == "cgi_path")
-                current_route.cgi_path = tokens[1];
-            else if (tokens[0] == "upload_path")
-                current_route.upload_path = tokens[1];
-        }
+            fill_route(current_route, tokens);
         else if (in_server)
-        {
-            if (tokens[0] == "listen")
-            {
-                std::string addr_port = tokens[1];
-
-                // In C++98, niente .back(), si usa .size() e []
-                if (!addr_port.empty() && addr_port[addr_port.size() - 1] == ';')
-                    addr_port.erase(addr_port.size() - 1);
-
-                size_t colon_pos = addr_port.find(':');
-                if (colon_pos == std::string::npos)
-                {
-                    // Solo porta, senza indirizzo
-                    current_config.listen_address = "0.0.0.0";
-                    int port = toInt(addr_port);
-                    current_config.ports.push_back(port);
-                }
-                else
-                {
-                    current_config.listen_address = addr_port.substr(0, colon_pos);
-                    int port = toInt(addr_port.substr(colon_pos + 1));
-                    current_config.ports.push_back(port);
-                }
-            }
-            else if (tokens[0] == "server_name")
-                current_config.server_name = tokens[1];
-            else if (tokens[0] == "host")
-                current_config.host = tokens[1];
-            else if (tokens[0] == "max_body_size")
-                current_config.max_body_size = toULong(tokens[1]);
-            else if (tokens[0] == "error_page")
-            {
-                int err = toInt(tokens[1]);
-                current_config.error_pages[err] = tokens[2];
-            }
-        }
+            fill_config(current_config, tokens);
     }
     infile.close();
+    if (conf.size() < 1)
+        throw std::runtime_error("No server block in config file");
 }
 
 void create_server_from_config(std::vector<Server> &serv, const std::vector<config> &conf)
@@ -150,7 +155,6 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
     size_t i=0;
     while(i < conf.size())
     {
-        //Server s(conf.at(i));
         serv.push_back(Server(conf.at(i)));
         serv.at(i).bind_listen();
         i++;
