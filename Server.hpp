@@ -11,12 +11,20 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
+#include <cerrno>  // Per errno
+#include "config.hpp"
 
 class Server
 {
     private:
         std::vector<int> ports;
         std::string host;
+        std::string listen_address;
+        std::string server_name;
+        std::map<int, std::string> error_pages;
+        size_t max_body_size;
+        std::vector<Route> routes;
+
         std::vector<int> serv_fds;
         std::vector<sockaddr_in> server_addr;
     public:
@@ -39,4 +47,5 @@ class Server
         bool isServerFd(int fd) const;
         void bind_listen(void);
         void closing_fd(void);
+        void print_var(void) const;
 };

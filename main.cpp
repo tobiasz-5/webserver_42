@@ -85,8 +85,14 @@ int main(int argc, char **argv)
 		fill_configstruct(conf, s); //riempie struct dal file
 		print_config(conf); //stampa le struct config
 
+
 		std::vector<Server> serv; //crea vettore di server con dati di config
 		create_server_from_config(serv, conf);
+		for (size_t i = 0; i < serv.size(); ++i) //stampa i dati di ogni server
+		{
+			std::cout << "=== Server " << i + 1 << " ===\n";
+			serv[i].print_var();
+		}
 
 		std::map<int, Client> client;
 
