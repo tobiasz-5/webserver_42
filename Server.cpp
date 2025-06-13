@@ -48,9 +48,18 @@ Server::Server(Server const &other)
 
 Server &Server::operator=(Server const &other)
 {
-	this->serv_fds = other.serv_fds;
-    this->server_addr = other.server_addr;
-    this->ports = other.ports;
+	if (this != &other)
+    {
+        this->ports = other.ports;
+        this->host = other.host;
+        this->listen_address = other.listen_address;
+        this->server_name = other.server_name;
+        this->error_pages = other.error_pages;
+        this->max_body_size = other.max_body_size;
+        this->routes = other.routes;
+        this->serv_fds = other.serv_fds;
+        this->server_addr = other.server_addr;
+    }
 	return (*this);
 }
 
