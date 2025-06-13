@@ -74,12 +74,16 @@ void close_all_fd(std::vector<Server> &servers, std::map<int, Client> &client)
 		close(it->first);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	try
 	{
+		if (argc != 2)
+			throw config::ConfigException();
 		std::vector<config> conf;  //vettore con dati di ogni server, preso da file di config
-		fill_configstruct(conf);
+		std::string s(argv[1]); //passa nome del file
+		fill_configstruct(conf, s); //riempie struct dal file
+		print_config(conf); //stampa le struct config
 
 		std::vector<Server> serv; //crea vettore di server con dati di config
 		create_server_from_config(serv, conf);
@@ -89,8 +93,7 @@ int main()
 		std::vector<pollfd> fds;
 		fds.reserve(MAX_CLIENT);
 
-		// Aggiunta di tutti gli fd di tutti i server alla struttura pollfd
-		for (size_t s = 0; s < serv.size(); ++s)
+		for (size_t s = 0; s < serv.size(); ++s) // Aggiunta di tutti gli fd di tutti i server alla struttura pollfd
 		{
 			for (size_t i = 0; i < serv[s].getnumport(); ++i)
 			{
@@ -100,8 +103,7 @@ int main()
 				fds.push_back(server_pollfd);
 			}
 		}
-		//loop principale che attende connessioni e richieste client
-		while (1)  
+		while (1)  //loop principale che attende connessioni e richieste client
 		{
 			int ret = poll(fds.data(), fds.size(), -1);
 			if (ret < 0)

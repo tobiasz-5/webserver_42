@@ -12,8 +12,6 @@
 #include <cstring>
 #include <algorithm>
 
-class config;
-
 class Server
 {
     private:
