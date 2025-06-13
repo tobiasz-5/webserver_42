@@ -11,7 +11,6 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
-#include <cerrno>  // Per errno
 #include "config.hpp"
 
 class Server

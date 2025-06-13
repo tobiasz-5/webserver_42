@@ -7,11 +7,13 @@ Server::Server(const struct config &config)
     ports = config.ports;
     host = config.host;
     listen_address = config.listen_address;
+    std::cout << "listen: " << listen_address << std::endl;
+
     server_name = config.server_name;
+    std::cout << "server_name: " << server_name << std::endl;
     error_pages = config.error_pages;
     max_body_size = config.max_body_size;
     routes = config.routes;
-    std::cout << "listen: " << listen_address;
 
     serv_fds.reserve(config.ports.size());
     server_addr.reserve(config.ports.size());
@@ -49,12 +51,6 @@ Server &Server::operator=(Server const &other)
 	this->serv_fds = other.serv_fds;
     this->server_addr = other.server_addr;
     this->ports = other.ports;
-    this->host = other.host;
-    this->listen_address = other.listen_address;
-    this->server_name = other.server_name;
-    this->error_pages = other.error_pages;
-    this->max_body_size = other.max_body_size;
-    this->routes = other.routes;
 	return (*this);
 }
 
@@ -112,41 +108,8 @@ void Server::closing_fd(void)
 
 void Server::print_var(void) const
 {
-    std::cout << "inizio" << std::endl;
-    std::cout << "Listen Address: " << listen_address << "\n";
-        std::cout << "Ports: ";
-        for (size_t j = 0; j < ports.size(); ++j)
-        {
-            std::cout << ports[j];
-            if (j != ports.size() - 1) std::cout << ", ";
-        }
-        std::cout << "\n";
-        std::cout << "Server Name: " << server_name << "\n";
-        std::cout << "Host: " << host << "\n";
-        std::cout << "Max Body Size: " << max_body_size << "\n";
-        std::cout << "Error Pages:\n";
-        for (std::map<int, std::string>::const_iterator it = error_pages.begin(); it != error_pages.end(); ++it)
-        {
-            std::cout << "  " << it->first << " => " << it->second << "\n";
-        }
-        std::cout << "Routes:\n";
-        for (size_t r = 0; r < routes.size(); ++r)
-        {
-            const Route &route = routes[r];
-            std::cout << "  --- Route " << r + 1 << " ---\n";
-            std::cout << "  Allowed Methods: ";
-            for (size_t m = 0; m < route.allowed_methods.size(); ++m)
-            {
-                std::cout << route.allowed_methods[m];
-                if (m != route.allowed_methods.size() - 1) std::cout << ", ";
-            }
-            std::cout << "\n";
-            std::cout << "  Redirect: " << route.redirect << "\n";
-            std::cout << "  Directory Listing: " << (route.directory_listing ? "on" : "off") << "\n";
-            std::cout << "  Default File: " << route.default_file << "\n";
-            std::cout << "  CGI Extension: " << route.cgi_extension << "\n";
-            std::cout << "  CGI Path: " << route.cgi_path << "\n";
-            std::cout << "  Upload Path: " << route.upload_path << "\n";
-        }
-        std::cout << "\n";
+    std::cout << "listen: " << listen_address << std::endl;
+    std::cout << "server_name: " << server_name << std::endl;
+    std::cout << "host: " << host << std::endl;
+    std::cout << "max_body_size: " << max_body_size << std::endl;
 }

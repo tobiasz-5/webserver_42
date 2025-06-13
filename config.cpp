@@ -156,6 +156,7 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
     while(i < conf.size())
     {
         serv.push_back(Server(conf.at(i)));
+        std::cout << "Creating server for: " << conf.at(i).server_name << std::endl;
         serv.at(i).bind_listen();
         i++;
     }
