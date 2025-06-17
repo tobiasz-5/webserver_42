@@ -36,7 +36,15 @@ const struct sockaddr_in &Client::getStructaddr() const
     return(addr);
 }
 
+const Request  &Client::getRequest(void) const
+{ return request; }
+
 int Client::receiveRequest()
 {
-    return(request.receiveData(fd));
+    int bytesRead = request.receiveData(fd); // Read data from the client socket
+    if (bytesRead > 0)
+    {
+        request.parseRequest(); // Parse the HTTP request after receiving data
+    }
+    return bytesRead;
 }

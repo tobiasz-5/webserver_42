@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
+#include "response.hpp"
 
 #include <poll.h>
 #include <vector>
@@ -142,8 +143,12 @@ int main(int argc, char **argv)
 						}
 						else
 						{
-							const char *response = Response(it->fd);
-							send(it->fd, response, strlen(response), 0); // Invia la risposta al client
+							//const char *response = Response(it->fd);
+							const Request &request = client.at(it->fd).getRequest();
+							std::string resourcePath = request.getUri();
+							std::cout << "======METHOD: " << request.getMethod() << std::endl;
+							std::string response = the_response(request);
+							send(it->fd, response.c_str(), response.size(), 0); // Invia la risposta al client
 							++it;
 						}
 					}
