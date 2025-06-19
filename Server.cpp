@@ -91,6 +91,13 @@ void Server::bind_listen(void)
 {
     for (size_t i = 0; i < ports.size(); ++i)
     {
+        int opt = 1;
+        if (setsockopt(serv_fds.at(i), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        {
+            std::cerr << "setsockopt failed: " << strerror(errno) << std::endl;
+            close(serv_fds.at(i));
+            throw ServerCreationException();
+        }
         if (bind(serv_fds.at(i), (struct sockaddr *)&server_addr.at(i), sizeof(server_addr.at(i))) < 0)     //lega il socket creato all'indirizzo IP e alla porta specificati
         {
             std::cout << "bind error" << std::endl;

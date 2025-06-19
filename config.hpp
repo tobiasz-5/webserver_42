@@ -13,7 +13,7 @@
 
 class Server;
 
-struct Route
+struct route
 {
     std::vector<std::string> allowed_methods;  // GET, POST, DELETE
     std::string redirect;                      // Es: "301 http://..."
@@ -32,7 +32,7 @@ struct config  //rimepire le struct con parsing del config file
     std::string host;
     std::map<int, std::string> error_pages;
     size_t max_body_size;
-    std::vector<Route> routes;  //vettore delle routes, ossia informazioni per ogni blocco location del file .config
+    std::vector<route> routes;  //vettore delle routes, ossia informazioni per ogni blocco location del file .config
     class ConfigException : public std::exception
 	{
 		public:

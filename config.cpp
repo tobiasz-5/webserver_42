@@ -48,7 +48,7 @@ unsigned long to_long(const std::string &s)
     return val;
 }
 
-void fill_route(Route &current_route, const std::vector<std::string> &tokens)
+void fill_route(route &current_route, const std::vector<std::string> &tokens)
 {
     if (tokens[0] == "allowed_methods")
         current_route.allowed_methods.assign(tokens.begin() + 1, tokens.end());
@@ -102,27 +102,27 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
 {
     std::ifstream infile(filename.c_str());
     if (!infile.is_open())
-        throw std::runtime_error("Impossibile aprire file di configurazione.");
+        throw std::runtime_error("Can not open config file: " + filename);
     std::string line;
     config current_config;
-    Route current_route;
+    route current_route;
     bool in_server = false;
     bool in_location = false;
     while (std::getline(infile, line))
     {
-        line = trim_space(line);
+        line = trim_space(line); //SOLO space?
         if (line.empty() || line[0] == '#')
             continue;
         if (line.find("server {") != std::string::npos) //for now, controlla se trova blocco server su linea
         {
             in_server = true;
-            current_config = config();
+            current_config = config(); //struct
             continue;
         }
         if (line.find("location /") != std::string::npos) //for now
         {
             in_location = true;
-            current_route = Route();
+            current_route = route(); //struct
             continue;
         }
         if (line == "}" && in_location)
@@ -188,7 +188,7 @@ void print_config(const std::vector<config> &conf_list)
         std::cout << "Routes:\n";
         for (size_t r = 0; r < c.routes.size(); ++r)
         {
-            const Route &route = c.routes[r];
+            const route &route = c.routes[r];
             std::cout << "  --- Route " << r + 1 << " ---\n";
             std::cout << "  Allowed Methods: ";
             for (size_t m = 0; m < route.allowed_methods.size(); ++m)

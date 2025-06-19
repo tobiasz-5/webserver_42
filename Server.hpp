@@ -16,13 +16,13 @@
 class Server
 {
     private:
-        std::vector<int> ports;
+        std::vector<int> ports; 
         std::string host;
         std::string listen_address;
         std::string server_name;
         std::map<int, std::string> error_pages;
         size_t max_body_size;
-        std::vector<Route> routes;
+        std::vector<route> routes; // location / or /upload
 
         std::vector<int> serv_fds;
         std::vector<sockaddr_in> server_addr;

@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 		std::vector<config> conf;  //vettore con dati di ogni server, preso da file di config
 		std::string s(argv[1]); //passa nome del file
 		fill_configstruct(conf, s); //riempie struct dal file
-		print_config(conf); //stampa le struct config
+		//print_config(conf); //stampa le struct config
 
 		std::vector<Server> serv; //crea vettore di server con dati di config
 		create_server_from_config(serv, conf);
@@ -146,7 +146,8 @@ int main(int argc, char **argv)
 							//const char *response = Response(it->fd);
 							const Request &request = client.at(it->fd).getRequest();
 							std::string resourcePath = request.getUri();
-							std::cout << "======METHOD: " << request.getMethod() << std::endl;
+							std::cout << "=====URI = " << resourcePath << std::endl;
+							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
 							std::string response = the_response(request);
 							send(it->fd, response.c_str(), response.size(), 0); // Invia la risposta al client
 							++it;
