@@ -7,10 +7,7 @@ Server::Server(const struct config &config)
     ports = config.ports;
     host = config.host;
     listen_address = config.listen_address;
-    std::cout << "listen: " << listen_address << std::endl;
-
     server_name = config.server_name;
-    std::cout << "server_name: " << server_name << std::endl;
     error_pages = config.error_pages;
     max_body_size = config.max_body_size;
     routes = config.routes;
@@ -35,6 +32,7 @@ Server::Server(const struct config &config)
         server_addr.push_back(addr);  // aggiungi struct addr
     }
     //debug message
+    print_var();
     std::cout << "Server sockets created for ports:" << std::endl;
     for (size_t i = 0; i < ports.size(); ++i)
         std::cout << " " << ports.at(i);

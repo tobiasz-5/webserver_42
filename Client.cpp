@@ -19,6 +19,7 @@ Client &Client::operator=(Client const &other)
 	this->fd = other.fd;
     this->addr = other.addr;
     this->request = other.request;
+    this->response = other.response;
 	return (*this);
 }
 

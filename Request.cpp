@@ -1,7 +1,8 @@
 
 #include "Request.hpp"
 #include <iostream>
-#include <sstream> 
+#include <sstream>
+#include <stdio.h>
 
 Request::Request() : buffer("")
 {
@@ -31,6 +32,8 @@ int Request::receiveData(int fd)
 {
     char temp_buffer[2048];
     int bytes_read = recv(fd, temp_buffer, sizeof(temp_buffer) - 1, 0);
+    if (bytes_read <= 0)
+        perror("recv failed");
     if (bytes_read > 0)
     {
         temp_buffer[bytes_read] = '\0'; // terminatore stringa

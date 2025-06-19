@@ -136,7 +136,15 @@ int main(int argc, char **argv)
    			}
 			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end();)
 			{
-				//std::cout << " fd current " <<it->fd << std::endl;
+				
+				/*
+				std::cout << "[DEBUG] Added client_fd " << it->fd << " with events = " << it->events << std::endl;
+				if (it->revents)
+				{
+					std::cout << "[DEBUG] FD " << it->fd << " revents: 0x" 
+							<< std::hex << it->revents << std::dec << std::endl;
+				}*/
+
 				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
 				{
 					std::cout << "Client disconnected or error: fd = " << it->fd << std::endl;
@@ -145,7 +153,6 @@ int main(int argc, char **argv)
 				}
 				if (it->revents & POLLIN)
 				{
-					//std::cout << "iterator fd: " << it->fd << std::endl;
 					if (isAnyServerFd(serv, it->fd))
 					{
 						addClient(it->fd, client, fds);
@@ -167,26 +174,19 @@ int main(int argc, char **argv)
 							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
 							client.at(it->fd).set_response(the_response(request));
 
-							//std::cout << "[DEBUG] RISPOSTA DA INVIARE:\n" << client.at(it->fd).getresponse() << std::endl;
+							std::cout << "[DEBUG] RISPOSTA DA INVIARE:\n" << client.at(it->fd).getresponse() << std::endl;
 
-							//it->events |= POLLOUT;
-							pollfd &pfd = *it;
-							pfd.events |= POLLOUT;
-
+							it->events |= POLLOUT;
 							++it;
 						}
 					}
 				}
-				else if (it->revents & POLLOUT)
+				if (it->revents & POLLOUT)
 				{
 					//std::cout << "RISPOSTA" << client.at(it->fd).getresponse().c_str() << std::endl;
-
 					send(it->fd, client.at(it->fd).getresponse().c_str(), client.at(it->fd).getresponse().size(), 0); // Invia la risposta al client
 					client.at(it->fd).set_response(""); //svuota risposta dopo averla mandata
-
-					pollfd &pfd = *it;
-					pfd.events &= ~POLLOUT; // togli POLLOUT da eventi che controllo
-					//it->events &= ~POLLOUT;  
+					it->events &= ~POLLOUT;
 				}
 				else
 					++it;
