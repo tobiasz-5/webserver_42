@@ -150,18 +150,6 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
         throw std::runtime_error("No server block in config file");
 }
 
-void create_server_from_config(std::vector<Server> &serv, const std::vector<config> &conf)
-{
-    size_t i=0;
-    while(i < conf.size())
-    {
-        serv.push_back(Server(conf.at(i)));
-        std::cout << "Creating server for: " << conf.at(i).server_name << std::endl;
-        serv.at(i).bind_listen();
-        i++;
-    }
-}
-
 void print_config(const std::vector<config> &conf_list)
 {
     std::cout << "inizio" << std::endl;
