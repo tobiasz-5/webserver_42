@@ -38,7 +38,7 @@ void add_server_fd(const std::vector<Server> &serv, std::vector<pollfd> &fds)
 		{
 			pollfd server_pollfd;
 			server_pollfd.fd = serv[s].getServfd(i);
-			server_pollfd.events = POLLIN;
+			server_pollfd.events = POLLIN; //aggiungo evento da monitorare
 			fds.push_back(server_pollfd);
 		}
 	}
@@ -164,13 +164,29 @@ int main(int argc, char **argv)
 
 							std::string resourcePath = request.getUri();
 							std::cout << "=====URI = " << resourcePath << std::endl;
-
 							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
-							std::string response = the_response(request);
-							send(it->fd, response.c_str(), response.size(), 0); // Invia la risposta al client
+							client.at(it->fd).set_response(the_response(request));
+
+							//std::cout << "[DEBUG] RISPOSTA DA INVIARE:\n" << client.at(it->fd).getresponse() << std::endl;
+
+							//it->events |= POLLOUT;
+							pollfd &pfd = *it;
+							pfd.events |= POLLOUT;
+
 							++it;
 						}
 					}
+				}
+				else if (it->revents & POLLOUT)
+				{
+					//std::cout << "RISPOSTA" << client.at(it->fd).getresponse().c_str() << std::endl;
+
+					send(it->fd, client.at(it->fd).getresponse().c_str(), client.at(it->fd).getresponse().size(), 0); // Invia la risposta al client
+					client.at(it->fd).set_response(""); //svuota risposta dopo averla mandata
+
+					pollfd &pfd = *it;
+					pfd.events &= ~POLLOUT; // togli POLLOUT da eventi che controllo
+					//it->events &= ~POLLOUT;  
 				}
 				else
 					++it;

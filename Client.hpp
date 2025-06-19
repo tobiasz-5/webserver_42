@@ -15,6 +15,7 @@ class Client
         int fd;
         struct sockaddr_in addr;
         Request request;
+        std::string response;
     public:
         Client();
         Client(int fd, struct sockaddr_in addr);
@@ -24,5 +25,7 @@ class Client
         const int &getClientfd(void) const;
         const struct sockaddr_in &getStructaddr(void) const;
         const Request &getRequest(void) const;
+        void set_response(std::string s);
+        const std::string &getresponse(void) const;
         int receiveRequest();
 };

@@ -48,3 +48,13 @@ int Client::receiveRequest()
     }
     return bytesRead;
 }
+
+void Client::set_response(std::string s)
+{
+    this->response = s;
+}
+
+const std::string &Client::getresponse(void) const
+{
+    return(response);
+}
