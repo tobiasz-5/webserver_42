@@ -6,8 +6,11 @@
 #include <poll.h>
 #include <vector>
 #include <fcntl.h>
+#include <signal.h>
 
 #define MAX_CLIENT 1024
+
+volatile sig_atomic_t stop = 0;
 
 void create_server_from_config(std::vector<Server> &serv, const std::vector<config> &conf)
 {
@@ -19,6 +22,12 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
         serv.at(i).bind_listen();
         i++;
     }
+	for (size_t i = 0; i < serv.size(); ++i) //stampa i dati di ogni server
+	{
+		std::cout << "--- Server " << i + 1 << " --- created " << std::endl;
+		serv[i].print_var();
+		std::cout << "---------------- " << std::endl;
+	}
 }
 
 void add_server_fd(const std::vector<Server> &serv, std::vector<pollfd> &fds)
@@ -87,6 +96,13 @@ void close_all_fd(std::vector<Server> &servers, std::map<int, Client> &client)
 		close(it->first);
 }
 
+void handle_signal(int signum)
+{
+	std::cout << " ---Stopping signal received--- "<< std::endl;
+	(void)signum;
+	stop = 1;
+}
+
 int main(int argc, char **argv)
 {
 	try
@@ -98,24 +114,25 @@ int main(int argc, char **argv)
 		std::map<int, Client> client; //map per salvare i client
 		std::vector<pollfd> fds; //vettore dei file descriptor da monitorare
 		std::string s(argv[1]); //passa nome del file
+		signal(SIGINT, handle_signal);
+    	signal(SIGTERM, handle_signal);
 
 		fill_configstruct(conf, s); //riempie struct dal file
-		//print_config(conf); //stampa le struct config
 		create_server_from_config(serv, conf);
-		for (size_t i = 0; i < serv.size(); ++i) //stampa i dati di ogni server
-		{
-			std::cout << "+++=== Server " << i + 1 << " ===\n";
-			serv[i].print_var();
-		}
 		fds.reserve(MAX_CLIENT);
 		add_server_fd(serv, fds); // Aggiunta di tutti gli fd di tutti i server alla struttura pollfd
-		while (1)  //loop principale che attende connessioni e richieste client
+		while (stop == 0)  //loop principale che attende connessioni e richieste client
 		{
 			int ret = poll(fds.data(), fds.size(), -1);
 			if (ret < 0)
 			{
-				std::cerr << " poll failed " << std::endl;
-				break;
+				if (errno == EINTR)
+					continue;
+				else
+				{
+					std::cerr << "poll failed: " << strerror(errno) << std::endl;
+					break;
+				}
    			}
 			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end();)
 			{

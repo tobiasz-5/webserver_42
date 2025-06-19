@@ -124,7 +124,7 @@ void Server::closing_fd(void)
 
 void Server::print_var(void) const
 {
-    std::cout << "listen: " << listen_address << std::endl;
+    std::cout << "listen from : " << listen_address << std::endl;
     std::cout << "server_name: " << server_name << std::endl;
     std::cout << "network interface: " << host << std::endl;
     std::cout << "max_body_size: " << max_body_size << std::endl;

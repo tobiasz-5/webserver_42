@@ -98,6 +98,52 @@ void fill_config(config &current_config, const std::vector<std::string> &tokens)
     }
 }
 
+void print_config(const std::vector<config> &conf_list)
+{
+    std::cout << "inizio" << std::endl;
+    for (size_t i = 0; i < conf_list.size(); ++i)
+    {
+        const config &c = conf_list[i];
+        std::cout << "=== Server " << i + 1 << " ===\n";
+        std::cout << "Listen Address: " << c.listen_address << "\n";
+        std::cout << "Ports: ";
+        for (size_t j = 0; j < c.ports.size(); ++j)
+        {
+            std::cout << c.ports[j];
+            if (j != c.ports.size() - 1) std::cout << ", ";
+        }
+        std::cout << "\n";
+        std::cout << "Server Name: " << c.server_name << "\n";
+        std::cout << "Host: " << c.host << "\n";
+        std::cout << "Max Body Size: " << c.max_body_size << "\n";
+        std::cout << "Error Pages:\n";
+        for (std::map<int, std::string>::const_iterator it = c.error_pages.begin(); it != c.error_pages.end(); ++it)
+        {
+            std::cout << "  " << it->first << " => " << it->second << "\n";
+        }
+        std::cout << "Routes:\n";
+        for (size_t r = 0; r < c.routes.size(); ++r)
+        {
+            const route &route = c.routes[r];
+            std::cout << "  --- Route " << r + 1 << " ---\n";
+            std::cout << "  Allowed Methods: ";
+            for (size_t m = 0; m < route.allowed_methods.size(); ++m)
+            {
+                std::cout << route.allowed_methods[m];
+                if (m != route.allowed_methods.size() - 1) std::cout << ", ";
+            }
+            std::cout << "\n";
+            std::cout << "  Redirect: " << route.redirect << "\n";
+            std::cout << "  Directory Listing: " << (route.directory_listing ? "on" : "off") << "\n";
+            std::cout << "  Default File: " << route.default_file << "\n";
+            std::cout << "  CGI Extension: " << route.cgi_extension << "\n";
+            std::cout << "  CGI Path: " << route.cgi_path << "\n";
+            std::cout << "  Upload Path: " << route.upload_path << "\n";
+        }
+        std::cout << "\n";
+    }
+}
+
 void fill_configstruct(std::vector<config> &conf, const std::string &filename)
 {
     std::ifstream infile(filename.c_str());
@@ -148,52 +194,7 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
     infile.close();
     if (conf.size() < 1)
         throw std::runtime_error("No server block in config file");
-}
-
-void print_config(const std::vector<config> &conf_list)
-{
-    std::cout << "inizio" << std::endl;
-    for (size_t i = 0; i < conf_list.size(); ++i)
-    {
-        const config &c = conf_list[i];
-        std::cout << "=== Server " << i + 1 << " ===\n";
-        std::cout << "Listen Address: " << c.listen_address << "\n";
-        std::cout << "Ports: ";
-        for (size_t j = 0; j < c.ports.size(); ++j)
-        {
-            std::cout << c.ports[j];
-            if (j != c.ports.size() - 1) std::cout << ", ";
-        }
-        std::cout << "\n";
-        std::cout << "Server Name: " << c.server_name << "\n";
-        std::cout << "Host: " << c.host << "\n";
-        std::cout << "Max Body Size: " << c.max_body_size << "\n";
-        std::cout << "Error Pages:\n";
-        for (std::map<int, std::string>::const_iterator it = c.error_pages.begin(); it != c.error_pages.end(); ++it)
-        {
-            std::cout << "  " << it->first << " => " << it->second << "\n";
-        }
-        std::cout << "Routes:\n";
-        for (size_t r = 0; r < c.routes.size(); ++r)
-        {
-            const route &route = c.routes[r];
-            std::cout << "  --- Route " << r + 1 << " ---\n";
-            std::cout << "  Allowed Methods: ";
-            for (size_t m = 0; m < route.allowed_methods.size(); ++m)
-            {
-                std::cout << route.allowed_methods[m];
-                if (m != route.allowed_methods.size() - 1) std::cout << ", ";
-            }
-            std::cout << "\n";
-            std::cout << "  Redirect: " << route.redirect << "\n";
-            std::cout << "  Directory Listing: " << (route.directory_listing ? "on" : "off") << "\n";
-            std::cout << "  Default File: " << route.default_file << "\n";
-            std::cout << "  CGI Extension: " << route.cgi_extension << "\n";
-            std::cout << "  CGI Path: " << route.cgi_path << "\n";
-            std::cout << "  Upload Path: " << route.upload_path << "\n";
-        }
-        std::cout << "\n";
-    }
+    //print_config(conf); //stampa le struct config
 }
 
 //old one test
