@@ -148,6 +148,7 @@ int main(int argc, char **argv)
 					{
 						addClient(it->fd, client, fds);
 						++it;
+						continue;
 					}
 					else
 					{
@@ -159,7 +160,6 @@ int main(int argc, char **argv)
 						else
 						{
 							const Request &request = client.at(it->fd).getRequest();
-
 							std::string resourcePath = request.getUri();
 							std::cout << "=====URI = " << resourcePath << std::endl;
 							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
@@ -176,8 +176,7 @@ int main(int argc, char **argv)
 					client.at(it->fd).set_response(""); //svuota risposta dopo averla mandata
 					it->events &= ~POLLOUT;
 				}
-				else
-					++it;
+				++it;
 			}
 		}
 		close_all_fd(serv, client);
