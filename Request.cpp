@@ -16,7 +16,15 @@ Request::Request(Request const &other)
 Request &Request::operator=(Request const &other)
 {
     if (this != &other)
+    {
         this->buffer = other.buffer;
+        this->method = other.method;
+        this->uri = other.uri;
+        this->http_version = other.http_version;
+        this->headers = other.headers;
+        this->body = other.body;
+        this->resource = other.resource;
+    }
     return (*this);
 }
 
@@ -59,11 +67,11 @@ void Request::parseRequest()
     std::istringstream stream(buffer);
     std::string line;
 
-    std::cout << "0000000000" <<std::endl;
+    //std::cout << "0000000000" <<std::endl;
     // Parse the request line (e.g., "GET /index.html HTTP/1.1")
     if (std::getline(stream, line))
     {
-        std::cout << "111111111" <<std::endl;
+        //std::cout << "111111111" <<std::endl;
         std::istringstream lineStream(line);
         lineStream >> method >> uri >> http_version;
         std::cout << "Parsed Method: " << method << ", URI: " << uri << ", HTTP Version: " << http_version << std::endl;
