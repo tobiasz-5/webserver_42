@@ -163,14 +163,13 @@ int main(int argc, char **argv)
 							std::string resourcePath = request.getUri();
 							std::cout << "=====URI = " << resourcePath << std::endl;
 							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
-							client.at(it->fd).set_response(the_response(request));
 							//std::cout << "[DEBUG] RISPOSTA DA INVIARE:\n" << client.at(it->fd).getresponse() << std::endl;
+							client.at(it->fd).set_response(the_response(request));
 							it->events |= POLLOUT;
-							++it;
 						}
 					}
 				}
-				else if (it->revents & POLLOUT)
+				if (it->revents & POLLOUT)
 				{
 					//std::cout << "RISPOSTA" << client.at(it->fd).getresponse().c_str() << std::endl;
 					send(it->fd, client.at(it->fd).getresponse().c_str(), client.at(it->fd).getresponse().size(), 0); // Invia la risposta al client
