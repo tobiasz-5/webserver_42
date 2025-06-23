@@ -22,7 +22,7 @@ class Server
         std::string server_name;
         std::map<int, std::string> error_pages;
         size_t max_body_size;
-        std::vector<route> routes; // location / or /upload
+        std::vector<route> routes; // BLOCK / or /upload
 
         std::vector<int> serv_fds;
         std::vector<sockaddr_in> server_addr;
@@ -42,7 +42,9 @@ class Server
 		};
         const int &getServfd(int i) const;
         const struct sockaddr_in &getStructaddr(int i) const;
+        const route getRoute(size_t i) const;
         size_t getnumport(void) const;
+        size_t getRoutesSize() const;
         bool isServerFd(int fd) const;
         void bind_listen(void);
         void closing_fd(void);

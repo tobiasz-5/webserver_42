@@ -61,9 +61,7 @@ Server &Server::operator=(Server const &other)
 	return (*this);
 }
 
-Server::~Server()
-{
-}
+Server::~Server(){}
 
 size_t Server::getnumport(void) const
 {
@@ -78,6 +76,18 @@ const int &Server::getServfd(int i) const
 const struct sockaddr_in &Server::getStructaddr(int i) const
 {
     return(server_addr.at(i));
+}
+
+size_t Server::getRoutesSize() const
+{
+    return routes.size();
+}
+
+const route Server::getRoute(size_t i) const
+{
+    if (i >= routes.size())
+        throw std::out_of_range("Index out of range in getRoute");
+    return routes.at(i);
 }
 
 bool Server::isServerFd(int fd) const

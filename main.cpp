@@ -1,7 +1,7 @@
 #include "config.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
-#include "response.hpp"
+#include "manage_request.hpp"
 
 #include <poll.h>
 #include <vector>
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 		fill_configstruct(conf, s); //riempie struct dal file
 		create_server_from_config(serv, conf);
 		fds.reserve(MAX_CLIENT);
-		add_server_fd(serv, fds); // Aggiunta di tutti gli fd di tutti i server alla struttura pollfd
+		add_server_fd(serv, fds); // Aggiungi a vector<pollfd> tutti gli fd di tutti i server 
 		while (stop == 0)  //loop principale che attende connessioni e richieste client
 		{
 			int ret = poll(fds.data(), fds.size(), -1);
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 					break;
 				}
    			}
-			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end();)
+			for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end(); )
 			{
 				if (it->revents & (POLLHUP | POLLERR | POLLNVAL))
 				{
@@ -157,14 +157,13 @@ int main(int argc, char **argv)
 							it = disconnectClient(it, fds, client);
 							continue;
 						}
-						else
+						else //ME
 						{
-							const Request &request = client.at(it->fd).getRequest();
-							std::string resourcePath = request.getUri();
-							std::cout << "=====URI = " << resourcePath << std::endl;
-							//std::cout << "======METHOD: " << request.getMethod() << std::endl;
-							//std::cout << "[DEBUG] RISPOSTA DA INVIARE:\n" << client.at(it->fd).getresponse() << std::endl;
-							client.at(it->fd).set_response(the_response(request));
+							const Server *matched_server = findMatchedServer(serv, it->fd);
+							if (matched_server)
+								set_response_for_client(client.at(it->fd), *matched_server);
+							// const Request &request = client.at(it->fd).getRequest();
+							// client.at(it->fd).set_response(the_response(request));
 							it->events |= POLLOUT;
 						}
 					}

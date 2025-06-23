@@ -15,6 +15,7 @@ class Server;
 
 struct route
 {
+    std::string uri;  // URI for the location (e.g., "/", "/upload")
     std::vector<std::string> allowed_methods;  // GET, POST, DELETE
     std::string redirect;                      // Es: "301 http://..."
     bool directory_listing;                    // Directory listing
