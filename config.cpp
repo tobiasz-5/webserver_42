@@ -51,7 +51,13 @@ unsigned long to_long(const std::string &s)
 void fill_route(route &current_route, const std::vector<std::string> &tokens)
 {
     if (tokens[0] == "allowed_methods")
+    {
         current_route.allowed_methods.assign(tokens.begin() + 1, tokens.end());
+        for (size_t i = 0; i < current_route.allowed_methods.size(); ++i)
+        {
+            std::cout << "55Allowed method: -->" << current_route.allowed_methods[i] << "<--" << std::endl; // debug
+        }
+    }
     else if (tokens[0] == "directory_listing")
         current_route.directory_listing = (tokens[1] == "on");
     else if (tokens[0] == "default_file")
@@ -144,6 +150,22 @@ void print_config(const std::vector<config> &conf_list)
     }
 }
 
+std::vector<std::string> divide_location_line(const std::string &line) {
+    std::vector<std::string> tokens;
+    std::istringstream iss(line);
+    std::string word;
+
+    while (iss >> word) {
+        // Remove trailing '{' if present
+        if (!word.empty() && word[word.size() - 1] == '{') {
+            word.erase(word.size() - 1);
+        }
+        tokens.push_back(word);
+    }
+
+    return tokens;
+}
+
 void fill_configstruct(std::vector<config> &conf, const std::string &filename)
 {
     std::ifstream infile(filename.c_str());
@@ -165,15 +187,18 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
             current_config = config(); //struct
             continue;
         }
-        if (line.find("location /") != std::string::npos) //for now
+        if (line.find("location ") != std::string::npos) //for now
         {
             in_location = true;
-            current_route = route(); //struct
+            current_route = route();
+            std::vector<std::string> location_line = divide_location_line(line);
+            current_route.uri = location_line[1]; //primo token dopo location
             continue;
         }
         if (line == "}" && in_location)
         {
             in_location = false;
+            std::cout << "D Location URI: =" << current_route.uri << "=" << std::endl;
             current_config.routes.push_back(current_route);
             continue;
         }

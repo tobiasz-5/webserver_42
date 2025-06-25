@@ -28,6 +28,22 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
 		serv[i].print_var();
 		std::cout << "---------------- " << std::endl;
 	}
+	for (size_t i = 0; i < serv.size(); ++i) //stampa le routes di ogni server
+	{
+		std::cout << "--- Server " << i + 1 << " --- routes: " << std::endl;
+		for (size_t j = 0; j < serv[i].getRoutesSize(); ++j)
+		{
+			const route &r = serv[i].getRoute(j);
+			std::cout << "URI: " << r.uri << ", Allowed Methods: ";
+			for (size_t i = 0; i < r.allowed_methods.size(); ++i)
+			{
+    			const std::string &method = r.allowed_methods[i];
+    			std::cout << method << " " << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "---------------- " << std::endl;
+	}
 }
 
 void add_server_fd(const std::vector<Server> &serv, std::vector<pollfd> &fds)
@@ -60,8 +76,7 @@ int addClient(int server_fd, std::map<int, Client> &client, std::vector<pollfd> 
     client_pollfd.fd = client_fd;
     client_pollfd.events = POLLIN;
     fds.push_back(client_pollfd);
-	client.insert(std::make_pair(client_fd, Client(client_fd, client_addr)));
-
+	client.insert(std::make_pair(client_fd, Client(client_fd, client_addr, server_fd))); // Aggiunge il client alla mappa con il suo file descriptor e indirizzo
 	std::cout << "New client: fd = " << client_fd << " PORT " << ntohs(client_addr.sin_port) << std::endl;
 	return(0);
 }
@@ -152,16 +167,14 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						if (client.at(it->fd).receiveRequest() <= 0)
+						if (client.at(it->fd).receiveRequest() <= 0) //FILL la richiesta del CLient?
 						{
 							it = disconnectClient(it, fds, client);
 							continue;
 						}
 						else //ME
 						{
-							const Server *matched_server = findMatchedServer(serv, it->fd);
-							if (matched_server)
-								set_response_for_client(client.at(it->fd), *matched_server);
+							set_response_for_client(client.at(it->fd), serv); // Gestisce la richiesta del client e imposta la risposta
 							// const Request &request = client.at(it->fd).getRequest();
 							// client.at(it->fd).set_response(the_response(request));
 							it->events |= POLLOUT;
@@ -170,7 +183,8 @@ int main(int argc, char **argv)
 				}
 				if (it->revents & POLLOUT)
 				{
-					//std::cout << "RISPOSTA" << client.at(it->fd).getresponse().c_str() << std::endl;
+					std::cout << "RISPOSTA: " << client.at(it->fd).getresponse().c_str() << std::endl;
+			
 					send(it->fd, client.at(it->fd).getresponse().c_str(), client.at(it->fd).getresponse().size(), 0); // Invia la risposta al client
 					client.at(it->fd).set_response(""); //svuota risposta dopo averla mandata
 					it->events &= ~POLLOUT;

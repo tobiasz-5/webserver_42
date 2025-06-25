@@ -42,7 +42,7 @@ class Server
 		};
         const int &getServfd(int i) const;
         const struct sockaddr_in &getStructaddr(int i) const;
-        const route getRoute(size_t i) const;
+        const route &getRoute(size_t i) const;
         size_t getnumport(void) const;
         size_t getRoutesSize() const;
         bool isServerFd(int fd) const;

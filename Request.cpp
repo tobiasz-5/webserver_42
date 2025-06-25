@@ -47,8 +47,8 @@ int Request::receiveData(int fd)
         temp_buffer[bytes_read] = '\0'; // terminatore stringa
         buffer.append(temp_buffer, bytes_read);
 
-        std::cout << "--->START BUFFER---<\n" << buffer << std::endl; //debug
-        std::cout << "--->END   BUFFER---<\n" << std::endl; //debug
+        //std::cout << "--->START BUFFER---<\n" << buffer << std::endl; //debug
+        //std::cout << "--->END   BUFFER---<\n" << std::endl; //debug
     }
     else if (bytes_read == 0)
     {
@@ -74,7 +74,7 @@ void Request::parseRequest()
         //std::cout << "111111111" <<std::endl;
         std::istringstream lineStream(line);
         lineStream >> method >> uri >> http_version;
-        std::cout << "Parsed Method: " << method << ", URI: " << uri << ", HTTP Version: " << http_version << std::endl;
+        std::cout << "---Parsed Request Method: =" << method << "= URI: =" << uri << "=---" << std::endl;
     }
 
     // Parse headers

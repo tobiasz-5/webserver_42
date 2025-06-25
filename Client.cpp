@@ -5,7 +5,7 @@ Client::Client()
 {
 }
 
-Client::Client(int fd, struct sockaddr_in addr) : fd(fd), addr(addr)
+Client::Client(int fd, struct sockaddr_in addr, int server_fd) : fd(fd), addr(addr), server_fd(server_fd)
 {
 }
 
@@ -20,6 +20,7 @@ Client &Client::operator=(Client const &other)
     this->addr = other.addr;
     this->request = other.request;
     this->response = other.response;
+    this->server_fd = other.server_fd;
 	return (*this);
 }
 
@@ -30,6 +31,11 @@ Client::~Client()
 const int &Client::getClientfd() const
 {
     return(fd);
+}
+
+const int &Client::getServerfd() const
+{
+    return(server_fd); // Return the server file descriptor associated with this client
 }
 
 const struct sockaddr_in &Client::getStructaddr() const

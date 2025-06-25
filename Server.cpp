@@ -83,7 +83,7 @@ size_t Server::getRoutesSize() const
     return routes.size();
 }
 
-const route Server::getRoute(size_t i) const
+const route &Server::getRoute(size_t i) const
 {
     if (i >= routes.size())
         throw std::out_of_range("Index out of range in getRoute");
