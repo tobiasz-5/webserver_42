@@ -2,6 +2,18 @@
 #include "Client.hpp"
 #include "manage_request.hpp"
 
+const Server *findMatchedServer(std::vector<Server> &servers, int fd) 
+{
+    for (size_t i = 0; i < servers.size(); ++i) 
+    {
+        if (servers[i].isServerFd(fd))
+        {
+            return (&servers[i]);
+        }
+    }
+    return NULL; // Return nullptr if no matching server is found
+}
+
 std::string loadHtmlFile(const std::string &filePath)
 {
     std::ifstream file(filePath.c_str()); // Open the file
@@ -65,25 +77,41 @@ std::string handle_request(std::string uri, const route &matched_route, std::str
     return "HTTP/1.1 404 Not Found\r\n\r\n";
 }
 
-void set_response_for_client(Client &client)
+std::string the_response(const Request &request, const Server &server)
 {
-    std::string response;
+    //const route *matched_route = NULL;
+    //short flag = 0;
+
     // Extract URI and method from the request
-    std::string uri_requested = client.getRequest().getUri();       // e.g., "/upload"
+    std::string uri_requested = request.getUri();       // e.g., "/upload"
     std::cout << "URI requested: =" << uri_requested << "=" << std::endl;
-    std::string requested_method = client.getRequest().getMethod(); // e.g., "POST"
+    std::string requested_method = request.getMethod(); // e.g., "POST"
     std::cout << "Method requested: =" << requested_method << "=" << std::endl;
+
     // Match URI to a route in the server
-    for (size_t i = 0; i < client.getServer()->getRoutesSize(); ++i)
+    for (size_t i = 0; i < server.getRoutesSize(); ++i)
     {
-        if (uri_requested == client.getServer()->getRoute(i).uri) // Match the URI
+        //const route current_route = server.getRoute(i); // Access the route
+        if (uri_requested == server.getRoute(i).uri) // Match the URI
         {
-            const route matched_route = client.getServer()->getRoute(i);
-            response = (handle_request(uri_requested, matched_route, requested_method));
-            client.set_response(response);
-            return;
+            const route matched_route = server.getRoute(i);
+            //flag = 1; // Set flag to indicate a match
+            //std::cout << "Matched route: =" << matched_route->uri << "=" << std::endl;
+            return (handle_request(uri_requested, matched_route, requested_method));
         }
     }
-    client.set_response("HTTP/1.1 404 Not Found\r\n\r\n");
-    return;
+    return "HTTP/1.1 404 Not Found\r\n\r\n";
+}
+
+void set_response_for_client(Client &client, std::vector<Server> &server)
+{
+    const Server *matched_server = findMatchedServer(server, client.getServerfd());
+    if (matched_server == NULL)
+    {
+        std::cerr << "Error: No matching server found for client fd " << client.getServerfd() << std::endl;
+        client.set_response("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+        return;
+    }
+    std::string response = the_response(client.getRequest(), *matched_server);
+    client.set_response(response);
 }

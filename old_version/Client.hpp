@@ -8,30 +8,26 @@
 #include <string.h>
 #include <map>
 #include "Request.hpp"
-#include "Server.hpp"
 
 class Client
 {
     private:
         int fd;
         struct sockaddr_in addr;
-        std::string response;
-        const Server *accepted_server; // server a cui è connesso il client
         Request request;
+        std::string response;
+        int server_fd; // fd del server a cui è connesso il client
     public:
         Client();
-        Client(int fd, struct sockaddr_in addr, const Server *accepted_server);
+        Client(int fd, struct sockaddr_in addr, int server_fd);
         Client(Client const &other);
 		Client &operator=(Client const &other);
         ~Client();
-
         const int &getClientfd(void) const;
-        const Server *getServer(void) const;
+        const int &getServerfd(void) const; // Aggiunto per ottenere il fd del server
         const struct sockaddr_in &getStructaddr(void) const;
         const Request &getRequest(void) const;
-        const std::string &getresponse(void) const;
-
         void set_response(std::string s);
-
+        const std::string &getresponse(void) const;
         int receiveRequest();
 };

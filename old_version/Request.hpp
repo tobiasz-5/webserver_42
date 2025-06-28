@@ -29,10 +29,8 @@ class Request
         const std::string &getBuffer() const;
         const std::string &getMethod() const;
         const std::string &getUri() const;
-        const std::string &gethttp_version() const;
-        const std::map<std::string, std::string> &getHeaders() const;
         const std::string &getBody() const;
-        const std::string &getResource() const;
+        const std::map<std::string, std::string> &getHeaders() const;
 
         int receiveData(int fd); // Reads data from the client socket
         void parseRequest(); // Parses the HTTP request

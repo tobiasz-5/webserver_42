@@ -28,17 +28,13 @@ Request &Request::operator=(Request const &other)
     return (*this);
 }
 
-Request::~Request()
-{
-}
-
 const std::string &Request::getMethod() const { return method; }
 const std::string &Request::getUri() const { return uri; }
 const std::string &Request::getBody() const { return body; }
-const std::string &Request::gethttp_version() const { return http_version; }
 const std::map<std::string, std::string> &Request::getHeaders() const { return headers; }
-const std::string &Request::getBuffer(void) const{ return(buffer); }
-const std::string &Request::getResource(void) const{ return(resource); }
+const std::string &Request::getBuffer(void) const{ return(buffer);}
+
+Request::~Request(){}
 
 int Request::receiveData(int fd)
 {

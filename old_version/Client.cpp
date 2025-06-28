@@ -5,7 +5,7 @@ Client::Client()
 {
 }
 
-Client::Client(int fd, struct sockaddr_in addr, const Server *accepted_server) : fd(fd), addr(addr), accepted_server(accepted_server)
+Client::Client(int fd, struct sockaddr_in addr, int server_fd) : fd(fd), addr(addr), server_fd(server_fd)
 {
 }
 
@@ -20,7 +20,7 @@ Client &Client::operator=(Client const &other)
     this->addr = other.addr;
     this->request = other.request;
     this->response = other.response;
-    this->accepted_server = other.accepted_server;
+    this->server_fd = other.server_fd;
 	return (*this);
 }
 
@@ -33,9 +33,9 @@ const int &Client::getClientfd() const
     return(fd);
 }
 
-const Server *Client::getServer() const
+const int &Client::getServerfd() const
 {
-    return(accepted_server); // Return the server associated with this client
+    return(server_fd); // Return the server file descriptor associated with this client
 }
 
 const struct sockaddr_in &Client::getStructaddr() const
@@ -44,19 +44,7 @@ const struct sockaddr_in &Client::getStructaddr() const
 }
 
 const Request  &Client::getRequest(void) const
-{
-    return request;
-}
-
-const std::string &Client::getresponse(void) const
-{
-    return(response);
-}
-
-void Client::set_response(std::string s)
-{
-    this->response = s;
-}
+{ return request; }
 
 int Client::receiveRequest()
 {
@@ -66,4 +54,14 @@ int Client::receiveRequest()
         request.parseRequest(); // Parse the HTTP request after receiving data
     }
     return bytesRead;
+}
+
+void Client::set_response(std::string s)
+{
+    this->response = s;
+}
+
+const std::string &Client::getresponse(void) const
+{
+    return(response);
 }
