@@ -19,10 +19,6 @@ std::string loadHtmlFile(const std::string &filePath)
 std::string handle_request(std::string uri, const route &matched_route, std::string requested_method)
 {
     const std::vector<std::string> allowed_methods = matched_route.allowed_methods;
-    for (size_t i = 0; i < allowed_methods.size(); i++)
-    {
-        std::cout << i << "Allowed method: =" << allowed_methods[i] << "=" << std::endl;
-    }
     std::cout << "-->Requested method: =" << requested_method << "=" << std::endl;
     std::cout << allowed_methods.size() << " allowed methodS for this route." << std::endl;
     if (requested_method == "GET")

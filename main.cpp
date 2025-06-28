@@ -28,22 +28,6 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
 		serv[i].print_var();
 		std::cout << "---------------- " << std::endl;
 	}
-	for (size_t i = 0; i < serv.size(); ++i) //stampa le routes di ogni server
-	{
-		std::cout << "--- Server " << i + 1 << " --- routes: " << std::endl;
-		for (size_t j = 0; j < serv[i].getRoutesSize(); ++j)
-		{
-			const route &r = serv[i].getRoute(j);
-			std::cout << "URI: " << r.uri << ", Allowed Methods: ";
-			for (size_t i = 0; i < r.allowed_methods.size(); ++i)
-			{
-    			const std::string &method = r.allowed_methods[i];
-    			std::cout << method << " " << std::endl;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << "---------------- " << std::endl;
-	}
 }
 
 int add_server_fd(const std::vector<Server> &serv, int epoll_fd)
@@ -209,6 +193,7 @@ int main(int argc, char **argv)
                     else
                     {
                         set_response_for_client(client.at(fd));
+                        std::cout << client.at(fd).getresponse() << std::endl; //print repsonse for debug
                         struct epoll_event ev;
                         ev.events = EPOLLOUT;
                         ev.data.fd = fd;

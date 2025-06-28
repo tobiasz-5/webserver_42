@@ -53,10 +53,6 @@ void fill_route(route &current_route, const std::vector<std::string> &tokens)
     if (tokens[0] == "allowed_methods")
     {
         current_route.allowed_methods.assign(tokens.begin() + 1, tokens.end());
-        for (size_t i = 0; i < current_route.allowed_methods.size(); ++i)
-        {
-            std::cout << "55Allowed method: -->" << current_route.allowed_methods[i] << "<--" << std::endl; // debug
-        }
     }
     else if (tokens[0] == "directory_listing")
         current_route.directory_listing = (tokens[1] == "on");
@@ -106,7 +102,7 @@ void fill_config(config &current_config, const std::vector<std::string> &tokens)
 
 void print_config(const std::vector<config> &conf_list)
 {
-    std::cout << "inizio" << std::endl;
+    std::cout << "PRINT READ FORM CONFIG FILE FOR DEBUG" << std::endl;
     for (size_t i = 0; i < conf_list.size(); ++i)
     {
         const config &c = conf_list[i];
@@ -148,14 +144,18 @@ void print_config(const std::vector<config> &conf_list)
         }
         std::cout << "\n";
     }
+    std::cout << "END FORM CONFIG FILE FOR DEBUG" << std::endl;
+    std::cout << "-------------------------------" << std::endl;
 }
 
-std::vector<std::string> divide_location_line(const std::string &line) {
+std::vector<std::string> divide_location_line(const std::string &line)
+{
     std::vector<std::string> tokens;
     std::istringstream iss(line);
     std::string word;
 
-    while (iss >> word) {
+    while (iss >> word)
+    {
         // Remove trailing '{' if present
         if (!word.empty() && word[word.size() - 1] == '{') {
             word.erase(word.size() - 1);
@@ -198,7 +198,6 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
         if (line == "}" && in_location)
         {
             in_location = false;
-            std::cout << "D Location URI: =" << current_route.uri << "=" << std::endl;
             current_config.routes.push_back(current_route);
             continue;
         }
@@ -219,7 +218,7 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
     infile.close();
     if (conf.size() < 1)
         throw std::runtime_error("No server block in config file");
-    //print_config(conf); //stampa le struct config
+    print_config(conf); //stampa le struct config, for debug
 }
 
 //old one test
