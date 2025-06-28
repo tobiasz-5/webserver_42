@@ -27,17 +27,24 @@ std::string handle_request(std::string uri, const route &matched_route, std::str
         std::string body = loadHtmlFile(filePath);
 
         return "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/plain\r\n"
+                    "Content-Length: 13\r\n"
+                    "Connection: keep-alive\r\n"
+                    "\r\n"
+                    "Hello, world!"; //test
+        
+        /*return "HTTP/1.1 200 OK\r\n"
                "Content-Type: text/html\r\n"
-               "Connection: close\r\n"
+               "Connection: keep-alive\r\n"
                "\r\n" +
-               body;
+               body;*/
     }
     if (requested_method == "POST")
     {
         // Process POST data (e.g., save uploaded files)
         return "HTTP/1.1 200 OK\r\n"
                "Content-Type: text/html\r\n"
-               "Connection: close\r\n"
+               "Connection: keep-alive\r\n"
                "\r\n"
                "<html><body><h1>POST request processed successfully!</h1></body></html>";
     }

@@ -193,7 +193,7 @@ int main(int argc, char **argv)
                     else
                     {
                         set_response_for_client(client.at(fd));
-                        std::cout << client.at(fd).getresponse() << std::endl; //print repsonse for debug
+                        //std::cout << client.at(fd).getresponse() << std::endl; //print repsonse for debug
                         struct epoll_event ev;
                         ev.events = EPOLLOUT;
                         ev.data.fd = fd;
@@ -202,9 +202,10 @@ int main(int argc, char **argv)
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
+                    //std::cout << client.at(fd).getresponse().c_str() << std::endl;
                     send(fd, client.at(fd).getresponse().c_str(), client.at(fd).getresponse().size(), 0);
+                    //std::cout << "sended response" << std::endl; //print for debug
                     client.at(fd).set_response("");
-
                     struct epoll_event ev;
                     ev.events = EPOLLIN;
                     ev.data.fd = fd;
