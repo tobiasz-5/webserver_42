@@ -190,8 +190,9 @@ int main(int argc, char **argv)
                         disconnectClient(fd, client, epoll_fd);
                         continue;
                     }
-                    else
+                    else if (client.at(fd).getRequest().getComplete() == true)
                     {
+                        client.at(fd).getRequest().setComplete(false);
                         set_response_for_client(client.at(fd));
                         //std::cout << client.at(fd).getresponse() << std::endl; //print repsonse for debug
                         struct epoll_event ev;

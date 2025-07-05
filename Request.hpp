@@ -19,7 +19,7 @@ class Request
         std::map<std::string, std::string> headers; // header: valore
         std::string body;     // solo se presente
         std::string resource; // Stores the requested resource (e.g., /index.html)
-        //bool complete;                     // true se la richiesta è completa
+        bool complete;                     // true se la richiesta è completa
     public:
         Request();
         Request(Request const &other);
@@ -33,7 +33,9 @@ class Request
         const std::map<std::string, std::string> &getHeaders() const;
         const std::string &getBody() const;
         const std::string &getResource() const;
+        const bool &getComplete() const;
 
+        void setComplete(bool b);
         int receiveData(int fd); // Reads data from the client socket
         void parseRequest(); // Parses the HTTP request
 };

@@ -39,6 +39,13 @@ const std::string &Request::gethttp_version() const { return http_version; }
 const std::map<std::string, std::string> &Request::getHeaders() const { return headers; }
 const std::string &Request::getBuffer(void) const{ return(buffer); }
 const std::string &Request::getResource(void) const{ return(resource); }
+const bool &Request::getComplete(void) const{ return(complete); }
+
+void Request::setComplete(bool b)
+{
+    complete = b;
+    return;
+}
 
 int Request::receiveData(int fd)
 {
@@ -65,7 +72,6 @@ int Request::receiveData(int fd)
     return (bytes_read);
 }
 
-//extracts the URI from the request line
 void Request::parseRequest()
 {
     std::istringstream stream(buffer);

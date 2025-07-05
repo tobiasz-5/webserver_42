@@ -29,6 +29,7 @@ class Client
         const Server *getServer(void) const;
         const struct sockaddr_in &getStructaddr(void) const;
         const Request &getRequest(void) const;
+        Request& getRequest(void);
         const std::string &getresponse(void) const;
 
         void set_response(std::string s);

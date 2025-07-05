@@ -48,6 +48,8 @@ const Request  &Client::getRequest(void) const
     return request;
 }
 
+Request& Client::getRequest() { return request; }
+
 const std::string &Client::getresponse(void) const
 {
     return(response);
@@ -60,10 +62,28 @@ void Client::set_response(std::string s)
 
 int Client::receiveRequest()
 {
-    int bytesRead = request.receiveData(fd); // Read data from the client socket
-    if (bytesRead > 0)
+    int bytesRead = request.receiveData(fd);
+    if (bytesRead <= 0)
+        return bytesRead;
+    if (request.getBuffer().find("\r\n\r\n") != std::string::npos) // Controlla se gli header sono completi
     {
-        request.parseRequest(); // Parse the HTTP request after receiving data
+        std::size_t headerEnd = request.getBuffer().find("\r\n\r\n") + 4; // \r\n\r\n significa fine dell'header
+        std::string headerPart = request.getBuffer().substr(0, headerEnd); //estrae la parte dell'header
+        std::istringstream headerStream(headerPart);
+        std::string line;
+        int contentLength = 0;
+        while (std::getline(headerStream, line) && line != "\r")
+        {
+            if (line.find("Content-Length:") != std::string::npos) // Estrai Content-Length se presente per vedere se ho ricevuto tutto il body
+            {
+                contentLength = std::stoi(line.substr(15));
+            }
+        }
+        if (request.getBuffer().size() >= headerEnd + contentLength)  // Controlla se ho tutto il body
+        {
+            request.setComplete(true);
+            request.parseRequest(); // Solo ora effettuo il parsing completo
+        }
     }
     return bytesRead;
 }

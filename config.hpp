@@ -18,9 +18,10 @@ struct route
     std::string uri;  // URI for the location (e.g., "/", "/upload")
     std::vector<std::string> allowed_methods;  // GET, POST, DELETE
     std::string redirect;                      // Es: "301 http://..."
+    std::string root_directory;
     bool directory_listing;                    // Directory listing
     std::string default_file;
-    std::string cgi_extension;                 // ".py"
+    std::vector<std::string> cgi_extensions;   // ".py" many extension possible
     std::string cgi_path;                      // "/usr/bin/python3"
     std::string upload_path;
 };
