@@ -35,6 +35,7 @@ class Request
         const std::string &getResource() const;
         const bool &getComplete() const;
 
+        void clearData(void);
         void setComplete(bool b);
         int receiveData(int fd); // Reads data from the client socket
         void parseRequest(); // Parses the HTTP request

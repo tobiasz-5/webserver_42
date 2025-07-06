@@ -60,29 +60,42 @@ void Client::set_response(std::string s)
     this->response = s;
 }
 
+void Client::clearRequest()
+{
+    request.clearData();
+}
+
 int Client::receiveRequest()
 {
     int bytesRead = request.receiveData(fd);
     if (bytesRead <= 0)
         return bytesRead;
-    if (request.getBuffer().find("\r\n\r\n") != std::string::npos) // Controlla se gli header sono completi
+    const std::string &buffer = request.getBuffer();
+    std::size_t headerEnd = buffer.find("\r\n\r\n");
+    if (headerEnd != std::string::npos)
     {
-        std::size_t headerEnd = request.getBuffer().find("\r\n\r\n") + 4; // \r\n\r\n significa fine dell'header
-        std::string headerPart = request.getBuffer().substr(0, headerEnd); //estrae la parte dell'header
+        headerEnd += 4; // Fine header
+        std::string headerPart = buffer.substr(0, headerEnd);
         std::istringstream headerStream(headerPart);
         std::string line;
         int contentLength = 0;
-        while (std::getline(headerStream, line) && line != "\r")
+        while (std::getline(headerStream, line))
         {
-            if (line.find("Content-Length:") != std::string::npos) // Estrai Content-Length se presente per vedere se ho ricevuto tutto il body
+            if (line.find("Content-Length:") != std::string::npos)
             {
-                contentLength = std::stoi(line.substr(15));
+                size_t pos = line.find(":");
+                if (pos != std::string::npos)
+                {
+                    std::string value = line.substr(pos + 1);
+                    value.erase(0, value.find_first_not_of(" \t"));
+                    contentLength = std::stoi(value);
+                }
             }
         }
-        if (request.getBuffer().size() >= headerEnd + contentLength)  // Controlla se ho tutto il body
+        if (buffer.size() >= headerEnd + contentLength) // Controllo presenza body completo
         {
             request.setComplete(true);
-            request.parseRequest(); // Solo ora effettuo il parsing completo
+            request.parseRequest(); 
         }
     }
     return bytesRead;

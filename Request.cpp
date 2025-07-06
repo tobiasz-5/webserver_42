@@ -24,6 +24,7 @@ Request &Request::operator=(Request const &other)
         this->headers = other.headers;
         this->body = other.body;
         this->resource = other.resource;
+        this->complete = other.complete;
     }
     return (*this);
 }
@@ -47,6 +48,18 @@ void Request::setComplete(bool b)
     return;
 }
 
+void Request::clearData()
+{
+    buffer.clear();
+    method.clear();
+    uri.clear();
+    http_version.clear();
+    headers.clear();
+    body.clear();
+    resource.clear();
+    complete = false;
+}
+
 int Request::receiveData(int fd)
 {
     char temp_buffer[2048];
@@ -57,7 +70,6 @@ int Request::receiveData(int fd)
     {
         temp_buffer[bytes_read] = '\0'; // terminatore stringa
         buffer.append(temp_buffer, bytes_read);
-
         //std::cout << "--->START BUFFER---<\n" << buffer << std::endl; //debug
         //std::cout << "--->END   BUFFER---<\n" << std::endl; //debug
     }
@@ -74,36 +86,34 @@ int Request::receiveData(int fd)
 
 void Request::parseRequest()
 {
-    std::istringstream stream(buffer);
+    size_t headerEnd = buffer.find("\r\n\r\n");
+    if (headerEnd == std::string::npos)
+        return; // Header incompleto
+    std::string headerPart = buffer.substr(0, headerEnd);
+    std::istringstream stream(headerPart);
     std::string line;
-
-    //std::cout << "0000000000" <<std::endl;
-    // Parse the request line (e.g., "GET /index.html HTTP/1.1")
     if (std::getline(stream, line))
     {
-        //std::cout << "111111111" <<std::endl;
         std::istringstream lineStream(line);
         lineStream >> method >> uri >> http_version;
-        std::cout << "---Parsed Request Method: =" << method << "= URI: =" << uri << "=---" << std::endl;
+        std::cout << "--- Parsed Request ---" << std::endl;
+        std::cout << "Method: " << method << ", URI: " << uri << std::endl;
     }
-
-    // Parse headers
-    while (std::getline(stream, line) && line != "\r")
+    // Headers
+    while (std::getline(stream, line))
     {
+        if (line == "\r" || line.empty())
+            break;
+
         size_t colonPos = line.find(':');
         if (colonPos != std::string::npos)
         {
             std::string key = line.substr(0, colonPos);
             std::string value = line.substr(colonPos + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
             headers[key] = value;
         }
     }
-
-    // Parse body (if present)
-    std::string bodyContent;
-    while (std::getline(stream, line))
-    {
-        bodyContent += line + "\n";
-    }
-    body = bodyContent;
+    // Body (se presente)
+    body = buffer.substr(headerEnd);
 }

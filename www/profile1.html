@@ -30,14 +30,69 @@
         .back-link:hover {
             text-decoration: underline;
         }
+        .upload-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .file-input {
+            padding: 10px;
+            border: 2px dashed #007BFF;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .upload-btn {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+        .upload-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Profile 1</h1>
     <div class="profile">
-        <img src="/images/profile1.jpg" alt="Profile 1 Image">
+        <img src="/images/micio1.jpg" alt="Profile 1 Image">
         <p>Name: Micione 1</p>
     </div>
+    
+    <div class="upload-section">
+        <h2>Upload New Image</h2>
+        <form class="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="file-input">
+                <input type="file" name="image" accept="image/jpeg,image/jpg,image/png" required>
+                <label>Choose JPEG/PNG image file</label>
+            </div>
+            <button type="submit" class="upload-btn">Upload Image</button>
+        </form>
+        <div class="upload-info">
+            <p>Supported formats: JPEG, JPG, PNG</p>
+            <p>Maximum file size: 10MB</p>
+        </div>
+    </div>
+    
     <a class="back-link" href="/index.html">Back to Homepage</a>
 </body>
 </html>

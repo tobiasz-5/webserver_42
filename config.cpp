@@ -59,7 +59,9 @@ void fill_route(route &current_route, const std::vector<std::string> &tokens)
     else if (tokens[0] == "default_file")
         current_route.default_file = tokens[1];
     else if (tokens[0] == "cgi_extension")
-        current_route.cgi_extension = tokens[1];
+    {
+        current_route.cgi_extensions.assign(tokens.begin() + 1, tokens.end());
+    }
     else if (tokens[0] == "cgi_path")
         current_route.cgi_path = tokens[1];
     else if (tokens[0] == "upload_path")
@@ -138,7 +140,12 @@ void print_config(const std::vector<config> &conf_list)
             std::cout << "  Redirect: " << route.redirect << "\n";
             std::cout << "  Directory Listing: " << (route.directory_listing ? "on" : "off") << "\n";
             std::cout << "  Default File: " << route.default_file << "\n";
-            std::cout << "  CGI Extension: " << route.cgi_extension << "\n";
+            std::cout << "  CGI Extension: " ;
+            for (size_t m = 0; m < route.cgi_extensions.size(); ++m)
+            {
+                std::cout << route.cgi_extensions[m];
+                if (m != route.cgi_extensions.size() - 1) std::cout << ", ";
+            }
             std::cout << "  CGI Path: " << route.cgi_path << "\n";
             std::cout << "  Upload Path: " << route.upload_path << "\n";
         }

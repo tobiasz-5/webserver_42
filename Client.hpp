@@ -33,6 +33,7 @@ class Client
         const std::string &getresponse(void) const;
 
         void set_response(std::string s);
+        void clearRequest(); // Clears the request data for the next request
 
         int receiveRequest();
 };
