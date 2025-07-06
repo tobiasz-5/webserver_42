@@ -88,7 +88,7 @@ int Client::receiveRequest()
                 {
                     std::string value = line.substr(pos + 1);
                     value.erase(0, value.find_first_not_of(" \t"));
-                    contentLength = std::stoi(value);
+                    contentLength = to_int(value);
                 }
             }
         }
