@@ -18,7 +18,6 @@ class Request
         std::string http_version;  // HTTP/1.1
         std::map<std::string, std::string> headers; // header: valore
         std::string body;     // solo se presente
-        std::string resource; // Stores the requested resource (e.g., /index.html)
         bool complete;                     // true se la richiesta è completa
     public:
         Request();

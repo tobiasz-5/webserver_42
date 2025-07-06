@@ -66,6 +66,10 @@ void fill_route(route &current_route, const std::vector<std::string> &tokens)
         current_route.cgi_path = tokens[1];
     else if (tokens[0] == "upload_path")
         current_route.upload_path = tokens[1];
+	else if (tokens[0] == "root_directory")
+        current_route.root_directory = tokens[1];
+	else if (tokens[0] == "redirect")
+        current_route.redirect = tokens[1];
 }
 
 void fill_config(config &current_config, const std::vector<std::string> &tokens)
@@ -104,11 +108,11 @@ void fill_config(config &current_config, const std::vector<std::string> &tokens)
 
 void print_config(const std::vector<config> &conf_list)
 {
-    std::cout << "PRINT READ FORM CONFIG FILE FOR DEBUG" << std::endl;
+    std::cout << "\033[36m READ FORM CONFIG FILE" << std::endl;
     for (size_t i = 0; i < conf_list.size(); ++i)
     {
         const config &c = conf_list[i];
-        std::cout << "=== Server " << i + 1 << " ===\n";
+        std::cout << "=== Config for Server " << i + 1 << " ===\n";
         std::cout << "Listen Address: " << c.listen_address << "\n";
         std::cout << "Ports: ";
         for (size_t j = 0; j < c.ports.size(); ++j)
@@ -130,6 +134,7 @@ void print_config(const std::vector<config> &conf_list)
         {
             const route &route = c.routes[r];
             std::cout << "  --- Route " << r + 1 << " ---\n";
+			std::cout << "  URI: " << route.uri << "\n";
             std::cout << "  Allowed Methods: ";
             for (size_t m = 0; m < route.allowed_methods.size(); ++m)
             {
@@ -148,11 +153,12 @@ void print_config(const std::vector<config> &conf_list)
             }
             std::cout << "  CGI Path: " << route.cgi_path << "\n";
             std::cout << "  Upload Path: " << route.upload_path << "\n";
+			std::cout << "  Root directory: " << route.root_directory << "\n";
         }
         std::cout << "\n";
     }
-    std::cout << "END FORM CONFIG FILE FOR DEBUG" << std::endl;
-    std::cout << "-------------------------------" << std::endl;
+    std::cout << "END FROM CONFIG FILE" << std::endl;
+    std::cout << "------------------------------- \033[0m" << std::endl;
 }
 
 std::vector<std::string> divide_location_line(const std::string &line)

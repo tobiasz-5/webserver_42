@@ -4,7 +4,8 @@
 
 Server::Server(const struct config &config)
 {
-    ports = config.ports;
+    std::cout << "\033[33m--Server costructor called--" << std::endl;
+	ports = config.ports;
     host = config.host;
     listen_address = config.listen_address;
     server_name = config.server_name;
@@ -31,12 +32,8 @@ Server::Server(const struct config &config)
             throw ServerCreationException();
         server_addr.push_back(addr);  // aggiungi struct addr
     }
-    //debug message
-    print_var();
-    std::cout << "Server sockets created for ports:" << std::endl;
-    for (size_t i = 0; i < ports.size(); ++i)
-        std::cout << " " << ports.at(i);
-    std::cout << std::endl;
+    print_server_var();
+    std::cout << "\033[0m" << std::endl;
 }
 
 Server::Server(Server const &other)
@@ -117,10 +114,46 @@ void Server::closing_fd(void)
     std::cout << "Closing all server fd" << std::endl;
 }
 
-void Server::print_var(void) const
+void Server::print_server_var(void) const
 {
     std::cout << "listen from : " << listen_address << std::endl;
     std::cout << "server_name: " << server_name << std::endl;
     std::cout << "network interface: " << host << std::endl;
     std::cout << "max_body_size: " << max_body_size << std::endl;
+
+	std::cout << "Server sockets created for ports:" << std::endl;
+    for (size_t i = 0; i < ports.size(); ++i)
+		std::cout << " " << ports.at(i);
+	std::cout << std::endl;
+	std::cout << "Error Pages    : " << std::endl;
+    for (std::map<int, std::string>::const_iterator it = error_pages.begin(); it != error_pages.end(); ++it)
+		std::cout << "  [" << it->first << "] -> " << it->second << std::endl;
+    std::cout << "Routes         : " << std::endl;
+    for (size_t i = 0; i < routes.size(); ++i)
+    {
+        const route &r = routes.at(i);
+        std::cout << "  Route " << i + 1 << ":" << std::endl;
+        std::cout << "    URI               : " << r.uri << std::endl;
+        std::cout << "    Root Directory    : " << r.root_directory << std::endl;
+        std::cout << "    Default File      : " << r.default_file << std::endl;
+        std::cout << "    Redirect          : " << r.redirect << std::endl;
+        std::cout << "    Directory Listing : " << (r.directory_listing ? "on" : "off") << std::endl;
+        std::cout << "    Allowed Methods   : ";
+        for (size_t j = 0; j < r.allowed_methods.size(); ++j)
+            std::cout << r.allowed_methods.at(j) << " ";
+        std::cout << std::endl;
+        std::cout << "    CGI Extensions    : ";
+        for (size_t j = 0; j < r.cgi_extensions.size(); ++j)
+            std::cout << r.cgi_extensions.at(j) << " ";
+        std::cout << std::endl;
+        std::cout << "    CGI Path          : " << r.cgi_path << std::endl;
+        std::cout << "    Upload Path       : " << r.upload_path << std::endl;
+    }
+
+    std::cout << "Server FDs     : ";
+    for (size_t i = 0; i < serv_fds.size(); ++i)
+        std::cout << serv_fds.at(i) << " ";
+    std::cout << std::endl;
+
+    std::cout << "------------------------------" << std::endl;
 }

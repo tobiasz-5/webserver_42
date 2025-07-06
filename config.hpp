@@ -40,7 +40,7 @@ struct config  //rimepire le struct con parsing del config file
 		public:
 			virtual const char* what() const throw()
 			{
-				return ("Config exception");
+				return ("Wrong number of arguments exception");
 			}
 	};
 };

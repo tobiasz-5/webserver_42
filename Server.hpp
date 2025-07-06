@@ -47,5 +47,5 @@ class Server
         bool isServerFd(int fd) const;
         void bind_listen(void);
         void closing_fd(void);
-        void print_var(void) const;
+        void print_server_var(void) const;
 };

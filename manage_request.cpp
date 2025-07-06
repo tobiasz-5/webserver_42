@@ -2,6 +2,19 @@
 #include "Client.hpp"
 #include "manage_request.hpp"
 
+void debug_message(const std::string &uri, const route &matched_route, const std::string &relativePath, const std::string &filePath, const std::string &requested_method, bool methodAllowed)
+{
+    std::cout << "\n\033[38;5;154m=========== MANAGE REQUEST ===========\n";
+    std::cout << "Requested method: " << requested_method << "\n";
+    std::cout << "URI received: " << uri << "\n";
+    std::cout << "Route URI: " << matched_route.uri << "\n";
+    std::cout << "Root directory: " << matched_route.root_directory << "\n";
+    std::cout << "Relative path: " << relativePath << "\n";
+    std::cout << "Final path: " << filePath << "\n";
+    std::cout << "Method allowed: " << (methodAllowed ? "yes" : "no") << "\n";
+    std::cout << "===============================================\033[0m\n\n";
+}
+
 std::string handle_request(std::string uri, const route &matched_route, std::string requested_method, const Client &client)
 {
     bool methodAllowed = std::find(matched_route.allowed_methods.begin(), matched_route.allowed_methods.end(), requested_method) != matched_route.allowed_methods.end();
@@ -16,6 +29,7 @@ std::string handle_request(std::string uri, const route &matched_route, std::str
     if (relativePath.empty() || relativePath == "/")
         relativePath = "/" + matched_route.default_file;
     std::string filePath = matched_route.root_directory + relativePath;
+	debug_message(uri, matched_route, relativePath, filePath, requested_method, methodAllowed);
     struct stat fileStat;
     if (stat(filePath.c_str(), &fileStat) == -1) // controlla se file esiste
     {
@@ -99,9 +113,7 @@ void set_response_for_client(Client &client)
 {
     std::string response;
     std::string uri_requested = client.getRequest().getUri();       // Extract URI and method from the request // e.g., "/upload"
-    std::cout << "URI requested: =" << uri_requested << "=" << std::endl;
     std::string requested_method = client.getRequest().getMethod(); // e.g., "POST"
-    std::cout << "Method requested: =" << requested_method << "=" << std::endl;
     for (size_t i = 0; i < client.getServer()->getRoutesSize(); ++i) // Match URI to a route in the server
     {
         std::string route_uri = client.getServer()->getRoute(i).uri;

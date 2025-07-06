@@ -18,16 +18,9 @@ void create_server_from_config(std::vector<Server> &serv, const std::vector<conf
     while(i < conf.size())
     {
         serv.push_back(Server(conf.at(i)));
-        std::cout << "Creating server for: " << conf.at(i).server_name << std::endl;
         serv.at(i).bind_listen();
         i++;
     }
-	for (size_t i = 0; i < serv.size(); ++i) //stampa i dati di ogni server
-	{
-		std::cout << "--- Server " << i + 1 << " --- created " << std::endl;
-		serv[i].print_var();
-		std::cout << "---------------- " << std::endl;
-	}
 }
 
 int add_server_fd(const std::vector<Server> &serv, int epoll_fd)
@@ -84,13 +77,13 @@ int addClient(int server_fd, std::map<int, Client> &client, int epoll_fd, const 
         return -1;
     }
     client.insert(std::make_pair(client_fd, Client(client_fd, client_addr, server)));
-    std::cout << "New client: fd = " << client_fd << " PORT " << ntohs(client_addr.sin_port) << std::endl;
+    std::cout << "\033[35mNew client connected: fd = " << client_fd << " PORT " << ntohs(client_addr.sin_port) << "\033[0m" << std::endl;
     return 0;
 }
 
 void disconnectClient(int fd, std::map<int, Client> &client, int epoll_fd)
 {
-    std::cout << "Client disconnected: fd = " << fd << std::endl;
+    std::cout << "\033[31mClient disconnection: fd = " << fd << "\033[0m" <<std::endl;
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     close(fd);
     client.erase(fd);
@@ -203,9 +196,9 @@ int main(int argc, char **argv)
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
-                    //std::cout << client.at(fd).getresponse().c_str() << std::endl;
+                    std::cout << "\033[38;5;208m---Response---" << std::endl << client.at(fd).getresponse().c_str() << std::endl;
                     send(fd, client.at(fd).getresponse().c_str(), client.at(fd).getresponse().size(), 0);
-                    //std::cout << "sended response" << std::endl; //print for debug
+                    std::cout << "---End Sended response---\033[0m" << std::endl;
                     client.at(fd).set_response("");
                     client.at(fd).clearRequest(); // Clear request data for next request
                     struct epoll_event ev;
