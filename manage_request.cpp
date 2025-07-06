@@ -78,7 +78,7 @@ std::string handle_request(std::string uri, const route &matched_route, std::str
         std::string uploadDir = matched_route.upload_path;
         std::string filename = "uploaded_file";
         std::string fullPath = uploadDir + "/" + filename;
-        std::ofstream outfile(fullPath, std::ios::binary); //apre il file e se il file non esiste lo crea automaticamente
+        std::ofstream outfile(fullPath.c_str(), std::ios::binary); //apre il file e se il file non esiste lo crea automaticamente
         if (!outfile.is_open())
             return "HTTP/1.1 500 Internal Server Error\r\n\r\nFailed to save file.";
         outfile << client.getRequest().getBody(); // Scrivi il body della richiesta nel file
@@ -105,7 +105,7 @@ void set_response_for_client(Client &client)
     for (size_t i = 0; i < client.getServer()->getRoutesSize(); ++i) // Match URI to a route in the server
     {
         std::string route_uri = client.getServer()->getRoute(i).uri;
-        if (uri_requested.compare(0, route_uri.size(), route_uri) == 0 && (uri_requested.size() == route_uri.size() || uri_requested[route_uri.size()] == '/' || route_uri.back() == '/'))
+        if (uri_requested.compare(0, route_uri.size(), route_uri) == 0 && (uri_requested.size() == route_uri.size() || uri_requested[route_uri.size()] == '/' || route_uri[route_uri.size() - 1] == '/'))
         {
             const route matched_route = client.getServer()->getRoute(i);
             response = (handle_request(uri_requested, matched_route, requested_method, client));
