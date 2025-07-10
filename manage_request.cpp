@@ -272,6 +272,109 @@ void set_response_for_client(Client &client)
     }
 }
 
+
+/*
+std::string handle_request(std::string uri, const route &matched_route, std::string requested_method, const Client &client, const Server &server)
+{
+    // Controlla se il metodo è permesso
+    bool methodAllowed = std::find(matched_route.allowed_methods.begin(), matched_route.allowed_methods.end(), requested_method) != matched_route.allowed_methods.end();
+    if (!methodAllowed)
+        return generate_error_response(405, server);
+
+    // Redirect, se presente
+    if (!matched_route.redirect.empty())
+    {
+        return "HTTP/1.1 301 Moved Permanently\r\n"
+               "Location: " + matched_route.redirect + "\r\n\r\n";
+    }
+
+    debug_message(uri, matched_route, "", "", requested_method, methodAllowed, matched_route.upload_path);
+
+    // Gestione POST - Upload file
+    if (requested_method == "POST")
+    {
+        if (matched_route.upload_path.empty())
+            return generate_error_response(500, server);
+
+        std::string body = client.getRequest().getBody();
+        std::string content_type = client.getRequest().getHeader("Content-Type");
+        return handle_post_upload_multipart(matched_route.upload_path, body, content_type);
+    }
+
+    // Mapping URI su filesystem
+    std::string relativePath = uri.substr(matched_route.uri.length());
+    if (relativePath.empty() || relativePath == "/")
+        relativePath = "/" + matched_route.default_file;
+    std::string filePath = matched_route.root_directory + relativePath;
+
+    debug_message(uri, matched_route, relativePath, filePath, requested_method, methodAllowed, matched_route.upload_path);
+
+    struct stat fileStat;
+    if (stat(filePath.c_str(), &fileStat) == -1)
+        return generate_error_response(404, server);
+
+    // Se è una directory
+    if (S_ISDIR(fileStat.st_mode))
+    {
+        if (!matched_route.directory_listing)
+            return generate_error_response(403, server);
+
+        DIR *dir = opendir(filePath.c_str());
+        if (!dir)
+            return generate_error_response(500, server);
+
+        std::stringstream body;
+        body << "<html><body><h1>Index of " << uri << "</h1><ul>";
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL)
+        {
+            body << "<li><a href=\"" << uri << "/" << entry->d_name << "\">" << entry->d_name << "</a></li>";
+        }
+        body << "</ul></body></html>";
+        closedir(dir);
+
+        std::stringstream response;
+        response << "HTTP/1.1 200 OK\r\n"
+                 << "Content-Type: text/html\r\n"
+                 << "Content-Length: " << body.str().length() << "\r\n"
+                 << "Connection: keep-alive\r\n\r\n"
+                 << body.str();
+        return response.str();
+    }
+
+    // GET - Serve file
+    if (requested_method == "GET")
+    {
+        std::ifstream file(filePath.c_str());
+        if (!file.is_open())
+            return generate_error_response(404, server);
+
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string body = buffer.str();
+
+        std::stringstream response;
+        response << "HTTP/1.1 200 OK\r\n"
+                 << "Content-Type: text/html\r\n"
+                 << "Content-Length: " << body.length() << "\r\n"
+                 << "Connection: keep-alive\r\n\r\n"
+                 << body;
+        return response.str();
+    }
+
+    // DELETE
+    if (requested_method == "DELETE")
+    {
+        if (remove(filePath.c_str()) == 0)
+            return "HTTP/1.1 200 OK\r\n\r\nFile deleted successfully.";
+        else
+            return generate_error_response(500, server);
+    }
+
+    return generate_error_response(400, server);
+}*/
+
+
 /*
 void set_response_for_client(Client &client)
 {
