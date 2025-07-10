@@ -40,6 +40,14 @@ const std::map<std::string, std::string> &Request::getHeaders() const { return h
 const std::string &Request::getBuffer(void) const{ return(buffer); }
 const bool &Request::getComplete(void) const{ return(complete); }
 
+std::string Request::getHeader(const std::string& key) const
+{
+    std::map<std::string, std::string>::const_iterator it = headers.find(key);
+    if (it != headers.end())
+        return it->second;
+    return ""; // o throw, o valore di default
+}
+
 void Request::setComplete(bool b)
 {
     complete = b;
@@ -106,7 +114,7 @@ void Request::parseRequest()
             headers[key] = value;
         }
     }
-    body = buffer.substr(headerEnd); // Body (se presente)
+	body = buffer.substr(headerEnd + 4); // Body (se presente)
 	std::cout << "\n\033[38;5;22m--- Parsed Request ---" << std::endl;
     std::cout << "Method       : " << method << std::endl;
     std::cout << "URI          : " << uri << std::endl;

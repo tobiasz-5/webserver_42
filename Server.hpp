@@ -44,6 +44,7 @@ class Server
         const route &getRoute(size_t i) const;
         size_t getnumport(void) const;
         size_t getRoutesSize() const;
+		const std::map<int, std::string> &getError_pages(void) const;
         bool isServerFd(int fd) const;
         void bind_listen(void);
         void closing_fd(void);

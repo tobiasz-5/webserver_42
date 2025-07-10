@@ -31,6 +31,7 @@ class Request
         const std::string &gethttp_version() const;
         const std::map<std::string, std::string> &getHeaders() const;
         const std::string &getBody() const;
+		std::string getHeader(const std::string& key) const;
         const std::string &getResource() const;
         const bool &getComplete() const;
 

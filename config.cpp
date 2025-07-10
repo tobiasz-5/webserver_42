@@ -106,6 +106,97 @@ void fill_config(config &current_config, const std::vector<std::string> &tokens)
     }
 }
 
+std::vector<std::string> divide_location_line(const std::string &line)
+{
+    std::vector<std::string> tokens;
+    std::istringstream iss(line);
+    std::string word;
+
+    while (iss >> word)
+    {
+        if (!word.empty() && word[word.size() - 1] == '{') // Remove trailing '{' if present
+		{
+            word.erase(word.size() - 1);
+        }
+        tokens.push_back(word);
+    }
+    return tokens;
+}
+
+route parse_location_block(std::istream &in, const std::string &uri)
+{
+    route current_route;
+    current_route.uri = uri;
+    std::string line;
+    while (std::getline(in, line))
+    {
+        line = trim_space(line);
+        if (line.empty() || line[0] == '#')
+			continue;
+        if (line == "}")
+			return current_route;
+        std::vector<std::string> tokens = divide_words(line);
+        if (!tokens.empty())
+            fill_route(current_route, tokens);
+    }
+    throw std::runtime_error("Unclosed location block");
+}
+
+config parse_server_block(std::istream &in)
+{
+    config current_config;
+    std::string line;
+    while (std::getline(in, line))
+    {
+        line = trim_space(line);
+        if (line.empty() || line[0] == '#')
+			continue;
+        if (line == "}")
+			return current_config;
+        if (line.rfind("location ", 0) == 0 && line[line.size() - 1] == '{')
+		{
+            std::vector<std::string> tokens = divide_location_line(line);
+            if (tokens.size() < 2)
+                throw std::runtime_error("Invalid location block");
+            route r = parse_location_block(in, tokens[1]);
+            current_config.routes.push_back(r);
+        }
+		else
+		{
+            std::vector<std::string> tokens = divide_words(line);
+            if (!tokens.empty())
+                fill_config(current_config, tokens);
+        }
+    }
+    throw std::runtime_error("Unclosed server block");
+}
+
+void fill_configstruct(std::vector<config> &conf, const std::string &filename)
+{
+    std::ifstream infile(filename.c_str());
+    if (!infile.is_open())
+        throw std::runtime_error("Can not open config file: " + filename);
+    std::string line;
+    while (std::getline(infile, line))
+    {
+        line = trim_space(line);
+        if (line.empty() || line[0] == '#') continue;
+        if (line == "server {")
+        {
+            config server_conf = parse_server_block(infile);
+            conf.push_back(server_conf);
+        }
+        else
+        {
+            throw std::runtime_error("Unexpected content outside of server block: " + line);
+        }
+    }
+    infile.close();
+    if (conf.empty())
+        throw std::runtime_error("No server block in config file");
+    print_config(conf);
+}
+
 void print_config(const std::vector<config> &conf_list)
 {
     std::cout << "\033[36m READ FORM CONFIG FILE" << std::endl;
@@ -161,24 +252,7 @@ void print_config(const std::vector<config> &conf_list)
     std::cout << "------------------------------- \033[0m" << std::endl;
 }
 
-std::vector<std::string> divide_location_line(const std::string &line)
-{
-    std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    std::string word;
-
-    while (iss >> word)
-    {
-        // Remove trailing '{' if present
-        if (!word.empty() && word[word.size() - 1] == '{') {
-            word.erase(word.size() - 1);
-        }
-        tokens.push_back(word);
-    }
-
-    return tokens;
-}
-
+/*
 void fill_configstruct(std::vector<config> &conf, const std::string &filename)
 {
     std::ifstream infile(filename.c_str());
@@ -232,7 +306,7 @@ void fill_configstruct(std::vector<config> &conf, const std::string &filename)
     if (conf.size() < 1)
         throw std::runtime_error("No server block in config file");
     print_config(conf); //stampa le struct config, for debug
-}
+}*/
 
 //old one test
 /*
