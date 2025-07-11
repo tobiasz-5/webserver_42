@@ -9,6 +9,7 @@
 #include <map>
 #include "Request.hpp"
 #include "Server.hpp"
+#include "utils.hpp"
 
 class Client
 {

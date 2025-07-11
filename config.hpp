@@ -48,6 +48,3 @@ struct config  //rimepire le struct con parsing del config file
 void fill_configstruct(std::vector<config> &conf, const std::string &filename);
 void create_server_from_config(std::vector<Server> &serv, const std::vector<config> &conf);
 void print_config(const std::vector<config> &conf_list);
-int to_int(const std::string &s);
-unsigned long to_long(const std::string &s);
-

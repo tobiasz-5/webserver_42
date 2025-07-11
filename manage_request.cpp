@@ -1,14 +1,7 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "manage_request.hpp"
-
-std::string to_stringgg(int num)
-{
-	std::stringstream ss;
-	ss << num;
-	std::string ris = ss.str();
-	return(ris);
-}
+#include "utils.hpp"
 
 void debug_message(const std::string &uri, const route &matched_route, const std::string &relativePath, const std::string &filePath, const std::string &requested_method, bool methodAllowed, const std::string &upload_path)
 {
@@ -23,6 +16,7 @@ void debug_message(const std::string &uri, const route &matched_route, const std
     std::cout << "Method allowed: " << (methodAllowed ? "yes" : "no") << "\n";
     std::cout << "===============================================\033[0m\n\n";
 }
+
 std::string generate_error_response(int code, const Server &serv)
 {
     std::map<int, std::string>::const_iterator it = serv.getError_pages().find(code);
@@ -112,12 +106,26 @@ std::string extract_boundary(const std::string& content_type)
     std::size_t pos = content_type.find(boundary_prefix);
     if (pos == std::string::npos)
         return "";
-    return "--" + content_type.substr(pos + boundary_prefix.length());
+
+    std::string boundary = content_type.substr(pos + boundary_prefix.length());
+
+    // Rimuove virgolette se presenti
+    if (!boundary.empty() && boundary[0] == '"')
+        boundary = boundary.substr(1, boundary.length());
+
+    // Rimuove eventuali spazi (trim leading/trailing)
+    boundary.erase(0, boundary.find_first_not_of(" \t\r\n"));
+    boundary.erase(boundary.find_last_not_of(" \t\r\n") + 1);
+
+    return boundary;
 }
 
 std::string handle_post_upload_multipart(const std::string& uploadDir, const std::string& body, const std::string& content_type)
 {
     std::string boundary = extract_boundary(content_type);
+
+	std::cout << "bounday trovato:" << boundary << std::endl;
+
     if (boundary.empty())
         return generate_upload_response(false, "Missing boundary in Content-Type");
     size_t file_start = body.find("filename=");
@@ -127,7 +135,13 @@ std::string handle_post_upload_multipart(const std::string& uploadDir, const std
     if (data_start == std::string::npos)
         return generate_upload_response(false, "Malformed multipart body");
     data_start += 4; // skip \r\n\r\n
-    size_t data_end = body.find(boundary, data_start); // Trova fine dati = posizione del boundary successivo
+
+	std::cout << "data start:" << data_start << std::endl;
+	std::cout << "bounday trovato:" << boundary << "FINE" << std::endl;
+	size_t data_end = body.find(boundary, data_start);
+
+	std::cout << "data end:" << data_end << std::endl;
+
     if (data_end == std::string::npos)
         return generate_upload_response(false, "No closing boundary");
     std::string file_data = body.substr(data_start, data_end - data_start - 2); // remove final \r\n
@@ -144,136 +158,6 @@ std::string handle_post_upload_multipart(const std::string& uploadDir, const std
     return generate_upload_response(true, "File saved as " + filename);
 }
 
-std::string handle_request(std::string uri, const route &matched_route, std::string requested_method, const Client &client, const Server &server)
-{
-    bool methodAllowed = std::find(matched_route.allowed_methods.begin(), matched_route.allowed_methods.end(), requested_method) != matched_route.allowed_methods.end();
-    if (!methodAllowed)
-        return (generate_error_response(405, server));
-    if (!matched_route.redirect.empty()) // Redirect
-    {
-        return "HTTP/1.1 301 Moved Permanently\r\n"
-               "Location: " + matched_route.redirect + "\r\n\r\n";
-    }
-    std::string relativePath = uri.substr(matched_route.uri.length()); // Mapping URI -> File system
-    if (relativePath.empty() || relativePath == "/")
-        relativePath = "/" + matched_route.default_file;
-    std::string filePath = matched_route.root_directory + relativePath;
-	debug_message(uri, matched_route, relativePath, filePath, requested_method, methodAllowed, matched_route.upload_path);
-    struct stat fileStat;
-    if (stat(filePath.c_str(), &fileStat) == -1) // controlla se file esiste
-    {
-        return (generate_error_response(404, server));
-    }
-    if (S_ISDIR(fileStat.st_mode)) // se directory
-    {
-        if (!matched_route.directory_listing)          // se non ha permessi, errore
-            return (generate_error_response(403, server));
-        DIR *dir = opendir(filePath.c_str());
-        if (!dir)
-            return (generate_error_response(500, server));
-        std::stringstream body;
-        body << "<html><body><h1>Index of " << uri << "</h1><ul>";
-        struct dirent *entry;
-        while ((entry = readdir(dir)) != NULL)
-        {
-            body << "<li><a href=\"" << uri << "/" << entry->d_name << "\">" << entry->d_name << "</a></li>";
-        }
-        body << "</ul></body></html>";
-        closedir(dir);
-        std::stringstream response;
-        response << "HTTP/1.1 200 OK\r\n"
-                 << "Content-Type: text/html\r\n"
-                 << "Content-Length: " << body.str().length() << "\r\n"
-                 << "Connection: keep-alive\r\n\r\n"
-                 << body.str();
-        return response.str();
-    }
-    /*
-    // Esecuzione CGI, da gestire ancora
-    for (size_t i = 0; i < matched_route.cgi_extensions.size(); ++i)
-    {
-        if (filePath.size() >= matched_route.cgi_extensions[i].size() &&
-            filePath.compare(filePath.size() - matched_route.cgi_extensions[i].size(),
-                             matched_route.cgi_extensions[i].size(),
-                             matched_route.cgi_extensions[i]) == 0)
-        {
-            return execute_cgi(filePath); // Ti preparo un esempio dopo se vuoi
-        }
-    }*/
-    if (requested_method == "GET")
-    {
-        std::ifstream file(filePath.c_str());
-        if (!file.is_open())
-            return (generate_error_response(404, server));
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        std::string body = buffer.str();
-        std::stringstream response;
-        response << "HTTP/1.1 200 OK\r\n"
-                 << "Content-Type: text/html\r\n"
-                 << "Content-Length: " << body.length() << "\r\n"
-                 << "Connection: keep-alive\r\n\r\n"
-                 << body;
-        return (response.str());
-    }
-    if (requested_method == "POST")
-    {
-		if (matched_route.upload_path.empty())
-			return generate_error_response(500, server);
-		std::string body = client.getRequest().getBody();
-		std::string content_type = client.getRequest().getHeader("Content-Type");
-		return handle_post_upload_multipart(matched_route.upload_path, body, content_type);
-    }
-    if (requested_method == "DELETE")
-    {
-        if (remove(filePath.c_str()) == 0)
-            return "HTTP/1.1 200 OK\r\n\r\nFile deleted successfully.";
-        else
-            return (generate_error_response(500, server));
-    }
-    return (generate_error_response(400, server));
-}
-
-void set_response_for_client(Client &client)
-{
-    std::string response;
-    std::string uri_requested = client.getRequest().getUri();       // es. "/upload/file.txt"
-    std::string requested_method = client.getRequest().getMethod(); // es. "POST"
-    const route* matched_route = NULL;
-    size_t longest_match_length = 0;
-    for (size_t i = 0; i < client.getServer()->getRoutesSize(); ++i)
-    {
-        const route& current_route = client.getServer()->getRoute(i);
-        const std::string& route_uri = current_route.uri;
-
-        bool match = false;
-
-        if (uri_requested == route_uri)
-            match = true;
-        else if (route_uri != "/" && uri_requested.find(route_uri + "/") == 0)
-            match = true;
-        else if (route_uri == "/" && longest_match_length == 0)
-            match = true;  // fallback solo se nessuna route ha matchato prima
-
-        if (match && route_uri.length() > longest_match_length)
-        {
-            matched_route = &current_route;
-            longest_match_length = route_uri.length();
-        }
-    }
-    if (matched_route)
-    {
-        response = handle_request(uri_requested, *matched_route, requested_method, client, *client.getServer());
-        client.set_response(response);
-    }
-    else
-    {
-        client.set_response(generate_error_response(404, *client.getServer())); // URI non trovato
-    }
-}
-
-
-/*
 std::string handle_request(std::string uri, const route &matched_route, std::string requested_method, const Client &client, const Server &server)
 {
     // Controlla se il metodo è permesso
@@ -372,7 +256,45 @@ std::string handle_request(std::string uri, const route &matched_route, std::str
     }
 
     return generate_error_response(400, server);
-}*/
+}
+
+void set_response_for_client(Client &client)
+{
+    std::string response;
+    std::string uri_requested = client.getRequest().getUri();       // es. "/upload/file.txt"
+    std::string requested_method = client.getRequest().getMethod(); // es. "POST"
+    const route* matched_route = NULL;
+    size_t longest_match_length = 0;
+    for (size_t i = 0; i < client.getServer()->getRoutesSize(); ++i)
+    {
+        const route& current_route = client.getServer()->getRoute(i);
+        const std::string& route_uri = current_route.uri;
+
+        bool match = false;
+
+        if (uri_requested == route_uri)
+            match = true;
+        else if (route_uri != "/" && uri_requested.find(route_uri + "/") == 0)
+            match = true;
+        else if (route_uri == "/" && longest_match_length == 0)
+            match = true;  // fallback solo se nessuna route ha matchato prima
+
+        if (match && route_uri.length() > longest_match_length)
+        {
+            matched_route = &current_route;
+            longest_match_length = route_uri.length();
+        }
+    }
+    if (matched_route)
+    {
+        response = handle_request(uri_requested, *matched_route, requested_method, client, *client.getServer());
+        client.set_response(response);
+    }
+    else
+    {
+        client.set_response(generate_error_response(404, *client.getServer())); // URI non trovato
+    }
+}
 
 
 /*
