@@ -19,6 +19,7 @@ class Request
         std::map<std::string, std::string> headers; // header: valore
         std::string body;     // solo se presente
         bool complete;                     // true se la richiesta è completa
+        bool        chunked;
     public:
         Request();
         Request(Request const &other);
@@ -39,4 +40,6 @@ class Request
         void setComplete(bool b);
         int receiveData(int fd); // Reads data from the client socket
         void parseRequest(); // Parses the HTTP request
+        bool        isChunked() const { return chunked; }
+        std::string unchunkBody(const std::string& raw);
 };
