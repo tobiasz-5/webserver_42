@@ -151,7 +151,13 @@ std::string handle_request(std::string uri, const route &rt,
         if (rel.empty() || rel == "/") rel = "/" + rt.default_file;
         std::string script = rt.root_directory + rel;
 
+        // std::string raw = runCgi(cli, rt, script, bodyIn);
+        struct stat sb;
+        if (stat(script.c_str(), &sb) == -1 || !S_ISREG(sb.st_mode))
+            return generate_error_response(404, srv);
+
         std::string raw = runCgi(cli, rt, script, bodyIn);
+
         size_t hdrEnd = raw.find("\r\n\r\n");
         if (hdrEnd == std::string::npos)
         {
