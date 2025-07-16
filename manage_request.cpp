@@ -91,9 +91,11 @@ static std::string extract_boundary(const std::string &ctype)
 {
     const std::string key = "boundary=";
     size_t pos = ctype.find(key);
-    if (pos == std::string::npos) return "";
+    if (pos == std::string::npos) 
+        return "";
     std::string b = ctype.substr(pos + key.size());
-    if (!b.empty() && b[0] == '"') b = b.substr(1);
+    if (!b.empty() && b[0] == '"') 
+        b = b.substr(1);
     b.erase(0, b.find_first_not_of(" \t\r\n"));
     b.erase(b.find_last_not_of(" \t\r\n") + 1);
     return b;
@@ -111,7 +113,8 @@ static std::string handle_post_upload_multipart(const std::string &dir,
     if (file_start == std::string::npos)
         return upload_response(false, "No file in body");
     size_t data_start = body.find("\r\n\r\n", file_start);
-    if (data_start == std::string::npos) return upload_response(false, "Malformed body");
+    if (data_start == std::string::npos) 
+        return upload_response(false, "Malformed body");
     data_start += 4;
     size_t data_end = body.find(boundary, data_start);
     if (data_end == std::string::npos)
@@ -119,10 +122,12 @@ static std::string handle_post_upload_multipart(const std::string &dir,
 
     std::string file_data = body.substr(data_start, data_end - data_start - 2);
 
-    struct stat st; if (stat(dir.c_str(), &st) == -1)
+    struct stat st; 
+    if (stat(dir.c_str(), &st) == -1)
+    {
         if (mkdir(dir.c_str(), 0755) == -1)
             return upload_response(false, "Cannot create dir");
-
+    }
     std::string fname = unique_filename(dir);
     std::ofstream out(fname.c_str(), std::ios::binary);
     if (!out.is_open())
@@ -136,7 +141,8 @@ std::string handle_request(std::string uri, const route &rt,
                            const Client &cli, const Server &srv)
 {
     bool allowed = std::find(rt.allowed_methods.begin(), rt.allowed_methods.end(), method) != rt.allowed_methods.end();
-    if (!allowed) return generate_error_response(405, srv);
+    if (!allowed) 
+        return generate_error_response(405, srv);
 
     if (!rt.redirect.empty())
         return "HTTP/1.1 301 Moved Permanently\r\nLocation: " + rt.redirect + "\r\n\r\n";
@@ -151,7 +157,6 @@ std::string handle_request(std::string uri, const route &rt,
         if (rel.empty() || rel == "/") rel = "/" + rt.default_file;
         std::string script = rt.root_directory + rel;
 
-        // std::string raw = runCgi(cli, rt, script, bodyIn);
         struct stat sb;
         if (stat(script.c_str(), &sb) == -1 || !S_ISREG(sb.st_mode))
             return generate_error_response(404, srv);
@@ -173,10 +178,11 @@ std::string handle_request(std::string uri, const route &rt,
         {
             size_t eol = hdr.find("\r\n");
             std::string sVal = hdr.substr(7, eol - 7);
-            hdr.erase(0, eol + 2);                   // rimuove la riga Status
-            statusLine = "HTTP/1.1 " + sVal;        // es. 302 Found
+            hdr.erase(0, eol + 2);                  
+            statusLine = "HTTP/1.1 " + sVal;       
         }
-        if (hdr.find("Content-Length:") == std::string::npos) {
+        if (hdr.find("Content-Length:") == std::string::npos) 
+        {
             std::ostringstream extra;
             extra << "\r\nContent-Length: " << bodyOut.size();
             hdr += extra.str();
@@ -185,7 +191,8 @@ std::string handle_request(std::string uri, const route &rt,
         response << statusLine << "\r\n" << hdr << "\r\n\r\n" << bodyOut;
         return response.str();
     }
-    if (method == "POST") {
+    if (method == "POST") 
+    {
         if (rt.upload_path.empty())
             return generate_error_response(500, srv);
         return handle_post_upload_multipart(rt.upload_path,
@@ -194,7 +201,8 @@ std::string handle_request(std::string uri, const route &rt,
     }
 
     std::string rel = uri.substr(rt.uri.length());
-    if (rel.empty() || rel == "/") rel = "/" + rt.default_file;
+    if (rel.empty() || rel == "/") 
+        rel = "/" + rt.default_file;
     std::string filePath = rt.root_directory + rel;
 
     debug_message(uri, rt, rel, filePath, method, allowed, rt.upload_path);
@@ -202,39 +210,59 @@ std::string handle_request(std::string uri, const route &rt,
     struct stat fs;
     if (stat(filePath.c_str(), &fs) == -1)
         return generate_error_response(404, srv);
+    if (S_ISDIR(fs.st_mode))
+    {
+        std::string indexPath = filePath + "/" + rt.default_file;
+        struct stat st2;
+        if (stat(indexPath.c_str(), &st2) == 0 && !S_ISDIR(st2.st_mode))
+        {
+            std::ifstream f(indexPath.c_str(), std::ios::binary);
+            if (!f.is_open()) 
+                return generate_error_response(404, srv);
+            std::stringstream buf; buf << f.rdbuf();
+            std::string body = buf.str();
+            std::stringstream res;
+            res << "HTTP/1.1 200 OK\r\nContent-Length: " << body.size()
+                << "\r\nContent-Type: text/plain\r\n\r\n" << body;
+            return res.str();
+        }
 
-    if (S_ISDIR(fs.st_mode)) {
-        if (!rt.directory_listing)
-            return generate_error_response(403, srv);
-        DIR *d = opendir(filePath.c_str());
-        if (!d) return generate_error_response(500, srv);
+        if (rt.directory_listing)
+        {
+            DIR *d = opendir(filePath.c_str());
+            if (!d) 
+                return generate_error_response(500, srv);
+            std::stringstream body;
+            body << "<html><body><h1>Index of " << uri << "</h1><ul>";
+            struct dirent *e;
+            while ((e = readdir(d)))
+                body << "<li><a href=\"" << uri << "/" << e->d_name << "\">" << e->d_name << "</a></li>";
+            body << "</ul></body></html>";
+            closedir(d);
 
-        std::stringstream body;
-        body << "<html><body><h1>Index of " << uri << "</h1><ul>";
-        struct dirent *e;
-        while ((e = readdir(d))) body << "<li><a href=\"" << uri << "/" << e->d_name
-                                      << "\">" << e->d_name << "</a></li>";
-        body << "</ul></body></html>";
-        closedir(d);
-
-        std::stringstream resp;
-        resp << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
-             << body.str().length() << "\r\nConnection: keep-alive\r\n\r\n" << body.str();
-        return resp.str();
+            std::stringstream res;
+            res << "HTTP/1.1 200 OK\r\nContent-Length: " << body.str().size() << "\r\nContent-Type: text/html\r\n\r\n" << body.str();
+            return res.str();
+        }
+        return generate_error_response(404, srv);
     }
 
-    if (method == "GET") {
+
+    if (method == "GET") 
+    {
         std::ifstream file(filePath.c_str(), std::ios::binary);
-        if (!file.is_open()) return generate_error_response(404, srv);
+
+        if (!file.is_open()) 
+            return generate_error_response(404, srv);
         std::stringstream buf; buf << file.rdbuf();
         std::string body = buf.str();
         std::stringstream resp;
-        resp << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
-             << body.length() << "\r\nConnection: keep-alive\r\n\r\n" << body;
+        resp << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " << body.length() << "\r\nConnection: keep-alive\r\n\r\n" << body;
         return resp.str();
     }
 
-    if (method == "DELETE") {
+    if (method == "DELETE") 
+    {
         if (remove(filePath.c_str()) == 0)
             return "HTTP/1.1 200 OK\r\n\r\nFile deleted successfully.";
         return generate_error_response(500, srv);
@@ -250,14 +278,18 @@ void set_response_for_client(Client &c)
     const route *match = NULL;
     size_t best = 0;
 
-    for (size_t i = 0; i < c.getServer()->getRoutesSize(); ++i) {
+    for (size_t i = 0; i < c.getServer()->getRoutesSize(); ++i) 
+    {
         const route &r = c.getServer()->getRoute(i);
         bool ok = false;
-        if (uri == r.uri) ok = true;
-        else if (r.uri != "/" && uri.find(r.uri + "/") == 0) ok = true;
-        else if (r.uri == "/" && best == 0) ok = true;
-
-        if (ok && r.uri.length() > best) {
+        if (uri == r.uri) 
+            ok = true;
+        else if (r.uri != "/" && uri.find(r.uri + "/") == 0) 
+            ok = true;
+        else if (r.uri == "/" && best == 0) 
+            ok = true;
+        if (ok && r.uri.length() > best) 
+        {
             match = &r;
             best = r.uri.length();
         }

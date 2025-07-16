@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cstring>
+#include <limits.h> 
+#include <stdlib.h> 
 
 static std::vector<char*> buildEnv(const Client& cli,
                                    const std::string& scriptPath,
@@ -36,13 +38,11 @@ static std::vector<char*> buildEnv(const Client& cli,
 
     std::vector<char*> env;
     for (size_t i = 0; i < temp.size(); ++i)
-        env.push_back(strdup(temp[i].c_str())); 
+        env.push_back(strdup(temp[i].c_str()));
+    env.push_back(strdup("REDIRECT_STATUS=200"));
     env.push_back(NULL);
     return env;  
 }
-
-
-
 
 /* ---------- utilità interne ---------- */
 // static void pushEnv(std::vector<std::string>& v,
@@ -59,26 +59,30 @@ static std::vector<char*> buildEnv(const Client& cli,
 //     return oss.str();
 // }
 
-/* ---------- verifica estensione ---------- */
 bool isCgiRequest(const std::string& uri, const route& r)
 {
     std::size_t dot = uri.rfind('.');
     if (dot == std::string::npos)
         return false;
-    std::string ext = uri.substr(dot);          // “.py”, “.php”…
+    std::string ext = uri.substr(dot);
     return std::find(r.cgi_extensions.begin(),
                      r.cgi_extensions.end(),
                      ext) != r.cgi_extensions.end();
 }
 
-
-
-/* ---------- esecuzione CGI ---------- */
 std::string runCgi(const Client& cli,
-                   const route&      r,
-                   const std::string& scriptPath,
+                   const route&  r,
+                   const std::string& scriptPathRel,
                    const std::string& body)
 {
+    char absBuf[PATH_MAX];
+    if (!realpath(scriptPathRel.c_str(), absBuf))
+        return "Status: 404 Not Found\r\n"
+               "Content-Type: text/plain\r\n\r\n"
+               "CGI script not found";
+
+    std::string scriptAbs(absBuf);
+
     int inPipe[2], outPipe[2];
     if (pipe(inPipe) == -1 || pipe(outPipe) == -1)
         throw std::runtime_error("pipe failed");
@@ -86,68 +90,57 @@ std::string runCgi(const Client& cli,
     pid_t pid = fork();
     if (pid == -1)
         throw std::runtime_error("fork failed");
-
-    // /* ================= CHILD ================= */
-    // if (pid == 0)
-    // {
-    //     dup2(inPipe[0],  STDIN_FILENO);
-    //     dup2(outPipe[1], STDOUT_FILENO);
-    //     close(inPipe[1]);  close(outPipe[0]);
-
-    //     /* argv: interprete + script */
-    //     char* argv[] = {
-    //         const_cast<char*>(r.cgi_path.c_str()),   // /usr/bin/python3
-    //         const_cast<char*>(scriptPath.c_str()),   // .../hello.py
-    //         NULL
-    //     };
-
-    //     std::vector<char*> env = buildEnv(cli, scriptPath, body);
-    //     execve(r.cgi_path.c_str(), argv, &env[0]);   // se torna, è errore
-    //     _exit(1);
-    // }
-
-    /* ================= CHILD ================= */
     if (pid == 0)
     {
         if (chdir(r.root_directory.c_str()) == -1)
             _exit(1);
 
-        dup2(inPipe[0], STDIN_FILENO);
+        dup2(inPipe[0],  STDIN_FILENO);
         dup2(outPipe[1], STDOUT_FILENO);
-        close(inPipe[1]); close(outPipe[0]);
+        close(inPipe[1]);
+        close(outPipe[0]);
 
-        /* ricava solo "hello.py" */
-        const char* scriptName = strrchr(scriptPath.c_str(), '/');
-        scriptName = scriptName ? scriptName + 1 : scriptPath.c_str();
+        const char* dot = strrchr(scriptAbs.c_str(), '.');
+        bool isPhp = (dot && std::strcmp(dot, ".php") == 0);
 
-        char* argv[] = {
-            const_cast<char*>(r.cgi_path.c_str()),   // /usr/bin/python3
-            const_cast<char*>(scriptName),           // hello.py
+        char* argvPhp[] = 
+        {
+            const_cast<char*>(r.cgi_path.c_str()),   
+            const_cast<char*>("-f"),
+            const_cast<char*>(scriptAbs.c_str()),
             NULL
         };
+        char* argvOther[] = {
+            const_cast<char*>(r.cgi_path.c_str()),   
+            const_cast<char*>(scriptAbs.c_str()),
+            NULL
+        };
+        char** argv = isPhp ? argvPhp : argvOther;
 
-        std::vector<char*> env = buildEnv(cli, scriptPath, body);
+        std::vector<char*> env = buildEnv(cli, scriptAbs, body);
+        env.push_back(strdup("REDIRECT_STATUS=200"));
+        env.push_back(NULL);
+
         execve(r.cgi_path.c_str(), argv, &env[0]);
-        _exit(1);
+        _exit(1);          
     }
 
+    close(inPipe[0]);  
+    close(outPipe[1]);
 
-    /* ================= PARENT ================= */
-    close(inPipe[0]);   // solo il figlio legge
-    close(outPipe[1]);  // solo il figlio scrive
-
-    if (!body.empty())              // invia body al CGI (POST)
+    if (!body.empty())
         write(inPipe[1], body.data(), body.size());
-    close(inPipe[1]);               // important: EOF per il figlio
+    close(inPipe[1]);
 
-    std::string output;
-    char buf[4096];
+    std::string output;  
+    char buf[4096]; 
     ssize_t n;
+
     while ((n = read(outPipe[0], buf, sizeof(buf))) > 0)
         output.append(buf, n);
     close(outPipe[0]);
 
-    int status;
-    waitpid(pid, &status, 0);       // raccoglie il figlio
-    return output;                  // header CGI + body
+    int status; 
+    waitpid(pid, &status, 0);
+    return output;   
 }

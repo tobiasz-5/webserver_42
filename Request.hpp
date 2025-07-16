@@ -18,7 +18,7 @@ class Request
         std::string http_version;  // HTTP/1.1
         std::map<std::string, std::string> headers; // header: valore
         std::string body;     // solo se presente
-        bool complete;                     // true se la richiesta è completa
+        bool        complete;                     // true se la richiesta è completa
         bool        chunked;
     public:
         Request();

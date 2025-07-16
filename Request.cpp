@@ -47,9 +47,14 @@ void Request::setComplete(bool b) { complete = b; }
 
 void Request::clearData()
 {
-    buffer.clear(); method.clear(); uri.clear(); http_version.clear();
-    headers.clear(); body.clear();
-    complete = false; chunked = false;
+    buffer.clear(); 
+    method.clear(); 
+    uri.clear(); 
+    http_version.clear();
+    headers.clear(); 
+    body.clear();
+    complete = false; 
+    chunked = false;
 }
 
 
@@ -67,22 +72,25 @@ int Request::receiveData(int fd)
     return n;
 }
 
-/* ================== UNCHUNK HELPER ================== */
 
 std::string Request::unchunkBody(const std::string& raw)
 {
-    std::string out; size_t pos = 0;
+    std::string out; 
+    size_t pos = 0;
     while (true)
     {
         size_t crlf = raw.find("\r\n", pos);
-        if (crlf == std::string::npos) break;
+        if (crlf == std::string::npos) 
+            break;
         std::string lenHex = raw.substr(pos, crlf-pos);
         unsigned long len = strtoul(lenHex.c_str(), NULL, 16);
-        if (len == 0) break;                     // trailer
+        if (len == 0) 
+            break;   
         pos = crlf + 2;
-        if (pos + len > raw.size()) break;       // malformed
+        if (pos + len > raw.size()) 
+            break;   
         out.append(raw, pos, len);
-        pos += len + 2;                          // skip chunk + CRLF
+        pos += len + 2; 
     }
     return out;
 }
@@ -91,7 +99,8 @@ std::string Request::unchunkBody(const std::string& raw)
 void Request::parseRequest()
 {
     size_t headerEnd = buffer.find("\r\n\r\n");
-    if (headerEnd == std::string::npos) return;       
+    if (headerEnd == std::string::npos) 
+        return;       
 
     std::istringstream first(buffer.substr(0, headerEnd));
     std::string line;
@@ -101,14 +110,14 @@ void Request::parseRequest()
 
     while (std::getline(first, line))
     {
-        if (line=="\r" || line.empty()) break;
+        if (line=="\r" || line.empty()) 
+            break;
         size_t colon = line.find(':');
         if (colon != std::string::npos)
         {
             std::string key = line.substr(0, colon);
             std::string val = line.substr(colon+1);
             val.erase(0, val.find_first_not_of(" \t"));
-            // if (!val.empty() && val.back() == '\r') val.pop_back();
             if (!val.empty() && val[val.size() - 1] == '\r')
                 val.erase(val.size() - 1);
             headers[key] = val;
