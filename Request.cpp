@@ -25,20 +25,46 @@ Request &Request::operator=(Request const &other)
     return *this;
 }
 
-Request::~Request() {}
+Request::~Request()
+{
+}
 
+const std::string &Request::getMethod() const
+{
+	return method;
+}
 
-const std::string &Request::getMethod()        const { return method; }
-const std::string &Request::getUri()           const { return uri; }
-const std::string &Request::getBody()          const { return body; }
-const std::string &Request::gethttp_version()  const { return http_version; }
-const std::map<std::string,std::string>& Request::getHeaders() const { return headers; }
-const std::string &Request::getBuffer()        const { return buffer; }
-const bool        &Request::getComplete()      const { return complete; }
+const std::string &Request::getUri() const
+{
+	return uri;
+}
 
+const std::string &Request::getBody() const
+{
+	return body;
+}
 
-//per recuperare il valore di un header HTTP specifico dalla richiesta (Content-Type, Host, Content-lenght...)
-std::string Request::getHeader(const std::string& k) const
+const std::string &Request::gethttp_version() const
+{
+	return http_version;
+}
+
+const std::map<std::string, std::string> &Request::getHeaders() const
+{
+	return headers;
+}
+
+const std::string &Request::getBuffer(void) const
+{
+	return(buffer);
+}
+
+const bool &Request::getComplete(void) const
+{
+	return(complete);
+}
+
+std::string Request::getHeader(const std::string& k) const //per recuperare il valore di un header HTTP specifico dalla richiesta (Content-Type, Host, Content-lenght...)
 {
     std::map<std::string,std::string>::const_iterator it = headers.find(k);
     return (it != headers.end() ? it->second : ""); //se trovata, ritorna il valore associato it->second, altrimenti una stringa vuota ""

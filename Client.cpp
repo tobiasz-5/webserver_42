@@ -91,6 +91,13 @@ int Client::receiveRequest()
                     contentLength = to_int(value);
                 }
             }
+            //std::cout << contentLength << "---" << accepted_server->getMaxBodySize() << std::endl;
+			if ((size_t)contentLength > accepted_server->getMaxBodySize())
+			{
+				std::cerr << "❌ Body size (" << contentLength << " bytes) exceeds maximum allowed (" << accepted_server->getMaxBodySize() << " bytes)\n";
+				//request.setComplete(true); // forza chiusura della richiesta
+				return -1; // oppure segna per generare risposta 413
+			}
         }
         if (buffer.size() >= headerEnd + contentLength) // Controllo presenza body completo
         {

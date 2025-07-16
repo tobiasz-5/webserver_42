@@ -62,11 +62,35 @@ Server::~Server()
 {
 }
 
-size_t Server::getnumport(void) const {return (static_cast<size_t>(ports.size())); }
-const int &Server::getServfd(int i) const {return(serv_fds.at(i));}
-const struct sockaddr_in &Server::getStructaddr(int i) const {return(server_addr.at(i));}
-size_t Server::getRoutesSize() const {return routes.size();}
-const std::map<int, std::string> &Server::getError_pages(void) const {return(error_pages);}
+size_t Server::getnumport(void) const
+{
+	return(static_cast<size_t>(ports.size()));
+}
+
+const int &Server::getServfd(int i) const
+{
+	return(serv_fds.at(i));
+}
+
+const struct sockaddr_in &Server::getStructaddr(int i) const
+{
+	return(server_addr.at(i));
+}
+
+size_t Server::getRoutesSize(void) const
+{
+	return routes.size();
+}
+
+const std::map<int, std::string> &Server::getError_pages(void) const
+{
+	return(error_pages);
+}
+
+size_t Server::getMaxBodySize(void) const
+{
+    return max_body_size;
+}
 
 const route &Server::getRoute(size_t i) const
 {

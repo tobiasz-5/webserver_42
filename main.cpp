@@ -171,7 +171,6 @@ int main(int argc, char **argv)
                         disconnectClient(fd, client, epoll_fd);
                     continue;
                 }
-
                 if (isAnyServerFd(serv, fd))
                 {
                     addClient(fd, client, epoll_fd, findServerByFd(serv, fd));
