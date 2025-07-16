@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #eef2f3;
+        }
+        h1 {
+            color: #444;
+        }
+        .profile {
+            margin-top: 20px;
+        }
+        .profile img {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+        .form-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .form-field {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-field input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Profile 2</h1>
+    <div class="profile">
+        <img src="/images/micio2.jpg" alt="Profile 2 Image">
+        <p>Name: Micione 2</p>
+    </div>
+
+    <div class="form-section">
+        <h2>Send Text Data</h2>
+        <form action="/upload" method="post">
+            <div class="form-field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="e.g. micione2" required>
+            </div>
+            <div class="form-field">
+                <label for="message">Message</label>
+                <input type="text" id="message" name="message" placeholder="Say something..." required>
+            </div>
+            <button type="submit" class="submit-btn">Send POST (urlencoded)</button>
+        </form>
+    </div>
+
+    <a class="back-link" href="/index.html">Back to Homepage</a>
+</body>
+</html>

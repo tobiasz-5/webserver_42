@@ -71,7 +71,10 @@ std::string Request::getHeader(const std::string& k) const //per recuperare il v
 }
 
 //indica se la richiesta è completamente ricevuta e parsata
-void Request::setComplete(bool b) { complete = b; }
+void Request::setComplete(bool b)
+{
+    complete = b;
+}
 
 //azzerare/reset l’oggetto Request prima di riutilizzarlo per una nuova richiesta.
 void Request::clearData()

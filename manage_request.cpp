@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "manage_request.hpp"
+#include "manage_request_post.hpp"
 #include "utils.hpp"
 #include "cgi_utils.hpp"
 #include <dirent.h>
@@ -65,77 +66,6 @@ std::string generate_error_response(int code, const Server &serv)
     return res.str();
 }
 
-static std::string upload_response(bool ok, const std::string &msg)
-{
-    std::string body = "<html><body><h1>";
-    body += (ok ? "Upload Success" : "Upload Failed");
-    body += "</h1><p>" + msg + "</p></body></html>";
-    std::stringstream res;
-    res << (ok ? "HTTP/1.1 201 Created" : "HTTP/1.1 500 Internal Server Error")
-        << "\r\nContent-Type: text/html\r\nContent-Length: " << body.size()
-        << "\r\nConnection: close\r\n\r\n" << body;
-    return res.str();
-}
-
-static std::string unique_filename(const std::string &dir)
-{
-    char buf[20];
-    std::time_t t = std::time(NULL);
-    std::tm *tm_ptr = std::localtime(&t);
-    std::strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", tm_ptr);
-    std::stringstream ss; ss << dir << "/upload_" << buf << ".dat";
-    return ss.str();
-}
-
-static std::string extract_boundary(const std::string &ctype)
-{
-    const std::string key = "boundary=";
-    size_t pos = ctype.find(key);
-    if (pos == std::string::npos) 
-        return "";
-    std::string b = ctype.substr(pos + key.size());
-    if (!b.empty() && b[0] == '"') 
-        b = b.substr(1);
-    b.erase(0, b.find_first_not_of(" \t\r\n"));
-    b.erase(b.find_last_not_of(" \t\r\n") + 1);
-    return b;
-}
-
-static std::string handle_post_upload_multipart(const std::string &dir,
-                                                const std::string &body,
-                                                const std::string &ctype)
-{
-    std::string boundary = extract_boundary(ctype);
-    if (boundary.empty())
-        return upload_response(false, "Missing boundary");
-
-    size_t file_start = body.find("filename=");
-    if (file_start == std::string::npos)
-        return upload_response(false, "No file in body");
-    size_t data_start = body.find("\r\n\r\n", file_start);
-    if (data_start == std::string::npos) 
-        return upload_response(false, "Malformed body");
-    data_start += 4;
-    size_t data_end = body.find(boundary, data_start);
-    if (data_end == std::string::npos)
-        return upload_response(false, "No closing boundary");
-
-    std::string file_data = body.substr(data_start, data_end - data_start - 2);
-
-    struct stat st; 
-    if (stat(dir.c_str(), &st) == -1)
-    {
-        if (mkdir(dir.c_str(), 0755) == -1)
-            return upload_response(false, "Cannot create dir");
-    }
-    std::string fname = unique_filename(dir);
-    std::ofstream out(fname.c_str(), std::ios::binary);
-    if (!out.is_open())
-        return upload_response(false, "Cannot write file");
-    out.write(file_data.c_str(), file_data.size()); out.close();
-    return upload_response(true, "Saved as " + fname);
-}
-
 std::string handle_request(std::string uri, const route &rt,
                            std::string method,
                            const Client &cli, const Server &srv)
@@ -195,9 +125,12 @@ std::string handle_request(std::string uri, const route &rt,
     {
         if (rt.upload_path.empty())
             return generate_error_response(500, srv);
-        return handle_post_upload_multipart(rt.upload_path,
-                                            cli.getRequest().getBody(),
-                                            cli.getRequest().getHeader("Content-Type"));
+        if (cli.getRequest().getHeader("Content-Type").find("multipart/form-data") != std::string::npos)
+            return handle_post_upload_multipart(rt.upload_path, cli.getRequest().getBody(), cli.getRequest().getHeader("Content-Type"));
+        else if (cli.getRequest().getHeader("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos)
+			return handle_post_urlencoded(cli.getRequest().getBody());
+		else 
+			return generate_error_response(415, srv); // Unsupported Media Type
     }
 
     std::string rel = uri.substr(rt.uri.length());
