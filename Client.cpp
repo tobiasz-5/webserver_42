@@ -74,7 +74,7 @@ int Client::receiveRequest()
     std::size_t headerEnd = buffer.find("\r\n\r\n");
     if (headerEnd != std::string::npos)
     {
-        headerEnd += 4; // Fine header
+        headerEnd += 4; 
         std::string headerPart = buffer.substr(0, headerEnd);
         std::istringstream headerStream(headerPart);
         std::string line;
