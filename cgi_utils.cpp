@@ -59,15 +59,14 @@ static std::vector<char*> buildEnv(const Client& cli,
 //     return oss.str();
 // }
 
+
 bool isCgiRequest(const std::string& uri, const route& r)
 {
-    std::size_t dot = uri.rfind('.');
-    if (dot == std::string::npos)
+    std::size_t dot = uri.rfind('.'); //cerca il . partendo da destra
+    if (dot == std::string::npos) 
         return false;
-    std::string ext = uri.substr(dot);
-    return std::find(r.cgi_extensions.begin(),
-                     r.cgi_extensions.end(),
-                     ext) != r.cgi_extensions.end();
+    std::string ext = uri.substr(dot); //estrae l estensione
+    return std::find(r.cgi_extensions.begin(), r.cgi_extensions.end(), ext) != r.cgi_extensions.end(); //ritorna true se trova ext nelle cgi_extensions , altrimenti find trova end e ritorna false
 }
 
 std::string runCgi(const Client& cli,

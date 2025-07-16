@@ -13,11 +13,11 @@ void fill_route(route &current_route, const std::vector<std::string> &tokens)
         current_route.directory_listing = (tokens[1] == "on");
     else if (tokens[0] == "default_file")
         current_route.default_file = tokens[1];
-    else if (tokens[0] == "cgi_extension")
+    else if (tokens[0] == "cgi_extension")// memorizza l'estensione del file da trattare come cgi [.php] [.py]
     {
         current_route.cgi_extensions.assign(tokens.begin() + 1, tokens.end());
     }
-    else if (tokens[0] == "cgi_path")
+    else if (tokens[0] == "cgi_path")// salva il path dell interprete
         current_route.cgi_path = tokens[1];
     else if (tokens[0] == "upload_path")
         current_route.upload_path = tokens[1];

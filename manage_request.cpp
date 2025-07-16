@@ -79,12 +79,13 @@ std::string handle_request(std::string uri, const route &rt,
 
     debug_message(uri, rt, "", "", method, allowed, rt.upload_path);
 
-    std::string pathOnly = uri.substr(0, uri.find('?'));
+    std::string pathOnly = uri.substr(0, uri.find('?'));//estrae il path dalla uri escludendo eventuali query string ?x=42
     if (isCgiRequest(pathOnly, rt))
     {
-        std::string bodyIn = (method == "POST") ? cli.getRequest().getBody() : "";
+        std::string bodyIn = (method == "POST") ? cli.getRequest().getBody() : ""; //se il metodo e' POST usiamo il body della richiesta altrimenti "" 
         std::string rel = pathOnly.substr(rt.uri.length());
-        if (rel.empty() || rel == "/") rel = "/" + rt.default_file;
+        if (rel.empty() || rel == "/") 
+            rel = "/" + rt.default_file;
         std::string script = rt.root_directory + rel;
 
         struct stat sb;
