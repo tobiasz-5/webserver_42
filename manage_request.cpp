@@ -94,33 +94,33 @@ std::string handle_request(std::string uri, const route &rt,
 
         std::string raw = runCgi(cli, rt, script, bodyIn);
 
-        size_t hdrEnd = raw.find("\r\n\r\n");
-        if (hdrEnd == std::string::npos)
+        size_t hdrEnd = raw.find("\r\n\r\n");//trova la fine degli header http
+        if (hdrEnd == std::string::npos) //se non la trova ne ricostruisce una minimale con lo status il content type la contentn lenght
         {
-            std::stringstream res;
+            std::stringstream res; 
             res << "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " << raw.size() << "\r\n\r\n" << raw;
-            return res.str();
+            return res.str(); //ritorna una stringa che rappresenta l header http minimale
         }
-        std::string hdr = raw.substr(0, hdrEnd);
-        std::string bodyOut = raw.substr(hdrEnd + 4);
+        std::string hdr = raw.substr(0, hdrEnd); //estrae tutti gli header
+        std::string bodyOut = raw.substr(hdrEnd + 4); //estrae tutto il body
 
-        std::string statusLine = "HTTP/1.1 200 OK";
-        if (hdr.compare(0, 7, "Status:") == 0)
+        std::string statusLine = "HTTP/1.1 200 OK";//status di default se non c'e' engli header
+        if (hdr.compare(0, 7, "Status:") == 0) //se c'e
         {
-            size_t eol = hdr.find("\r\n");
-            std::string sVal = hdr.substr(7, eol - 7);
-            hdr.erase(0, eol + 2);                  
-            statusLine = "HTTP/1.1 " + sVal;       
+            size_t eol = hdr.find("\r\n");//cerca la fine del primo header (cioe status)
+            std::string sVal = hdr.substr(7, eol - 7); //estrae cio che viene dopo status
+            hdr.erase(0, eol + 2);   //cancella tutto il primo header compresi \r\n               
+            statusLine = "HTTP/1.1 " + sVal;      //aggiorna l header status con lo status fornito dal cgi
         }
-        if (hdr.find("Content-Length:") == std::string::npos) 
+        if (hdr.find("Content-Length:") == std::string::npos)  //se l'header del cig non contiene  content lenght
         {
             std::ostringstream extra;
-            extra << "\r\nContent-Length: " << bodyOut.size();
-            hdr += extra.str();
+            extra << "\r\nContent-Length: " << bodyOut.size(); //riempiamo il campo con la size del body
+            hdr += extra.str(); //e la concateniamo all header
         }
         std::ostringstream response;
         response << statusLine << "\r\n" << hdr << "\r\n\r\n" << bodyOut;
-        return response.str();
+        return response.str();//ritorniamo la risposta da dare al client
     }
     if (method == "POST") 
     {
@@ -234,4 +234,3 @@ void set_response_for_client(Client &c)
     else
         c.set_response(generate_error_response(404, *c.getServer()));
 }
-
