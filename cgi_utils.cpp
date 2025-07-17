@@ -75,14 +75,14 @@ std::string runCgi(const Client& cli,
                    const std::string& body)
 {
     char absBuf[PATH_MAX];
-    if (!realpath(scriptPathRel.c_str(), absBuf))
+    if (!realpath(scriptPathRel.c_str(), absBuf)) //restituisce percorso pulito ad es toglie .
         return "Status: 404 Not Found\r\n"
                "Content-Type: text/plain\r\n\r\n"
                "CGI script not found";
 
-    std::string scriptAbs(absBuf);
+    std::string scriptAbs(absBuf); 
 
-    int inPipe[2], outPipe[2];
+    int inPipe[2], outPipe[2]; //per inviare e ricevere dati al/dal cgi
     if (pipe(inPipe) == -1 || pipe(outPipe) == -1)
         throw std::runtime_error("pipe failed");
 

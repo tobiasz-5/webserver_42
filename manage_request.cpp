@@ -83,13 +83,13 @@ std::string handle_request(std::string uri, const route &rt,
     if (isCgiRequest(pathOnly, rt))
     {
         std::string bodyIn = (method == "POST") ? cli.getRequest().getBody() : ""; //se il metodo e' POST usiamo il body della richiesta altrimenti "" 
-        std::string rel = pathOnly.substr(rt.uri.length());
+        std::string rel = pathOnly.substr(rt.uri.length()); //estrae cio che viene dopo la uri
         if (rel.empty() || rel == "/") 
-            rel = "/" + rt.default_file;
-        std::string script = rt.root_directory + rel;
+            rel = "/" + rt.default_file; //se necessario aggiorna rel con default file
+        std::string script = rt.root_directory + rel; //path assoluto del file cgi 
 
-        struct stat sb;
-        if (stat(script.c_str(), &sb) == -1 || !S_ISREG(sb.st_mode))
+        struct stat sb; //struttura di libreria che contiene info sui file
+        if (stat(script.c_str(), &sb) == -1 || !S_ISREG(sb.st_mode)) //stat recupera info su file - isreg controlla se file regolare
             return generate_error_response(404, srv);
 
         std::string raw = runCgi(cli, rt, script, bodyIn);
