@@ -61,7 +61,6 @@ static std::vector<char*> buildEnv(const Client& cli,
 //     return oss.str();
 // }
 
-
 bool isCgiRequest(const std::string& uri, const route& r)
 {
     std::size_t dot = uri.rfind('.'); //cerca il . partendo da destra
@@ -71,6 +70,112 @@ bool isCgiRequest(const std::string& uri, const route& r)
     return std::find(r.cgi_extensions.begin(), r.cgi_extensions.end(), ext) != r.cgi_extensions.end(); //ritorna true se trova ext nelle cgi_extensions , altrimenti find trova end e ritorna false
 }
 
+std::string runCgi(const Client& cli,
+                   const route&  r,
+                   const std::string& scriptPathRel,
+                   const std::string& body)
+{
+    char absBuf[PATH_MAX];
+    if (!realpath(scriptPathRel.c_str(), absBuf))
+        return "Status: 404 Not Found\r\n"
+               "Content-Type: text/plain\r\n\r\n"
+               "CGI script not found";
+
+    std::string scriptAbs(absBuf);
+
+    int inPipe[2], outPipe[2];
+    if (pipe(inPipe) == -1 || pipe(outPipe) == -1)
+        throw std::runtime_error("pipe failed");
+
+    pid_t pid = fork();
+    if (pid == -1)
+        throw std::runtime_error("fork failed");
+
+    if (pid == 0) // figlio
+    {
+        if (chdir(r.root_directory.c_str()) == -1)
+            _exit(1);
+
+        dup2(inPipe[0], STDIN_FILENO);
+        dup2(outPipe[1], STDOUT_FILENO);
+        close(inPipe[1]);
+        close(outPipe[0]);
+
+        const char* dot = strrchr(scriptAbs.c_str(), '.');
+        bool isPhp = (dot && std::strcmp(dot, ".php") == 0);
+
+        char* argvPhp[] = {
+            const_cast<char*>(r.cgi_path.c_str()),
+            const_cast<char*>(scriptAbs.c_str()),
+            NULL
+        };
+        char* argvOther[] = {
+            const_cast<char*>(r.cgi_path.c_str()),
+            const_cast<char*>(scriptAbs.c_str()),
+            NULL
+        };
+        char** argv = isPhp ? argvPhp : argvOther;
+
+        std::vector<char*> env = buildEnv(cli, scriptAbs, body);
+
+        execve(r.cgi_path.c_str(), argv, &env[0]);
+        _exit(1);
+    }
+
+    // padre
+    close(inPipe[0]);
+    close(outPipe[1]);
+
+    if (!body.empty())
+        write(inPipe[1], body.data(), body.size());
+    close(inPipe[1]);
+
+    const int timeout_ms = 5000;
+    int waited_ms = 0;
+    const int sleep_interval_ms = 100;
+
+    int status;
+    bool timed_out = false;
+
+    while (true) {
+        pid_t ret = waitpid(pid, &status, WNOHANG);
+        if (ret == -1) {
+            // errore waitpid
+            break;
+        } else if (ret > 0) {
+            // figlio terminato
+            break;
+        }
+
+        if (waited_ms >= timeout_ms) {
+            kill(pid, SIGKILL);
+            waitpid(pid, &status, 0);
+            timed_out = true;
+            break;
+        }
+
+        usleep(sleep_interval_ms * 1000);
+        waited_ms += sleep_interval_ms;
+    }
+
+    std::string output;
+    if (!timed_out) {
+        char buf[4096];
+        ssize_t n;
+        while ((n = read(outPipe[0], buf, sizeof(buf))) > 0)
+            output.append(buf, n);
+    } else {
+        output = "Status: 504 Gateway Timeout\r\nContent-Type: text/plain\r\n\r\nCGI script timed out";
+    }
+
+    close(outPipe[0]);
+    return output;
+}
+
+
+
+
+/*
 //Il server (padre) scrive nel inPipe[1] → va nello STDIN del CGI.
 //Il CGI (figlio) scrive nel STDOUT_FILENO, che è stato duplicato su outPipe[1].
 //Il server (padre) legge da outPipe[0].
@@ -151,14 +256,44 @@ std::string runCgi(const Client& cli,
         output.append(buf, n);
     close(outPipe[0]);
 
-    
-    int status; //variabile per stato di uscita del figlio
+     // Timeout settings
+    const int timeout_ms = 5000;       // 5 secondi timeout
+    int waited_ms = 0;
+    const int sleep_interval_ms = 100; // 100 ms di intervallo
 
-    //pid, aspettiamo il figlio, un unico processo, il cgi
-    //status non lo usiamo effetivamente
-    //0 server bloccato finche il figlio non termina
-    waitpid(pid, &status, 0); 
+    int status;
+    bool timed_out = false;
 
+    while (true) {
+        pid_t ret = waitpid(pid, &status, WNOHANG);
+        if (ret == -1) {
+            // Errore
+            break;
+        } else if (ret > 0) {
+            // Figlio terminato
+            break;
+        }
 
+        if (waited_ms >= timeout_ms) {
+            // Timeout raggiunto: uccidi figlio
+            kill(pid, SIGKILL);
+            waitpid(pid, &status, 0); // aspetta terminazione
+            timed_out = true;
+            break;
+        }
+
+        usleep(sleep_interval_ms * 1000); // dormi 100 ms
+        waited_ms += sleep_interval_ms;
+    }
+
+    if (!timed_out) {
+        // Leggi l'output solo se il processo non è andato in timeout
+        while ((n = read(outPipe[0], buf, sizeof(buf))) > 0)
+            output.append(buf, n);
+    } else {
+        output = "Status: 504 Gateway Timeout\r\nContent-Type: text/plain\r\n\r\nCGI script timed out";
+    }
+
+    close(outPipe[0]);
     return output;   
-}
+}*/

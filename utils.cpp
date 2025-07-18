@@ -55,3 +55,37 @@ std::string to_stringgg(int num)
 	std::string ris = ss.str();
 	return(ris);
 }
+
+
+std::string get_type(const std::string& path)
+{
+    static std::map<std::string, std::string> mime_types;
+    if (mime_types.empty()) {
+        mime_types[".html"] = "text/html";
+        mime_types[".htm"] = "text/html";
+        mime_types[".css"] = "text/css";
+        mime_types[".js"] = "application/javascript";
+        mime_types[".json"] = "application/json";
+        mime_types[".jpg"] = "image/jpeg";
+        mime_types[".jpeg"] = "image/jpeg";
+        mime_types[".png"] = "image/png";
+        mime_types[".gif"] = "image/gif";
+        mime_types[".svg"] = "image/svg+xml";
+        mime_types[".ico"] = "image/x-icon";
+        mime_types[".txt"] = "text/plain";
+        mime_types[".pdf"] = "application/pdf";
+        mime_types[".zip"] = "application/zip";
+        mime_types[".tar"] = "application/x-tar";
+        mime_types[".mp3"] = "audio/mpeg";
+        mime_types[".mp4"] = "video/mp4";
+    }
+    size_t dot_pos = path.find_last_of('.');
+    if (dot_pos != std::string::npos)
+    {
+        std::string ext = path.substr(dot_pos);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (mime_types.count(ext))
+            return mime_types[ext];
+    }
+    return "application/octet-stream"; // fallback per file binari sconosciuti
+}

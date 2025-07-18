@@ -191,15 +191,31 @@ std::string handle_request(std::string uri, const route &rt,
         std::stringstream buf; buf << file.rdbuf();
         std::string body = buf.str();
         std::stringstream resp;
-        resp << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " << body.length() << "\r\nConnection: keep-alive\r\n\r\n" << body;
+
+        std::string content_type = get_type(filePath);
+        resp << "HTTP/1.1 200 OK\r\nContent-Type: " << content_type << "\r\nContent-Length: " << body.length() << "\r\nConnection: keep-alive\r\n\r\n" << body;
         return resp.str();
     }
 
     if (method == "DELETE") 
     {
-        if (remove(filePath.c_str()) == 0)
-            return "HTTP/1.1 200 OK\r\n\r\nFile deleted successfully.";
-        return generate_error_response(500, srv);
+        struct stat fs;
+        if (stat(filePath.c_str(), &fs) == -1) {
+            // File non trovato
+            return generate_error_response(404, srv);
+        }
+        if (S_ISDIR(fs.st_mode)) {
+            // È una directory: opzionalmente potresti rifiutare o supportare la cancellazione ricorsiva
+            return generate_error_response(403, srv);
+        }
+
+        if (remove(filePath.c_str()) == 0) {
+            // Risposta standard 204 No Content
+            return "HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n";
+        } else {
+            // Errore cancellazione: probabilmente permessi
+            return generate_error_response(403, srv);
+        }
     }
 
     return generate_error_response(400, srv);
