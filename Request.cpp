@@ -92,7 +92,7 @@ void Request::clearData()
 //riceve i dati dalla socket (fd) e li aggiunge al buffer (request line, header, body)
 int Request::receiveData(int fd)
 {
-    char tmp[2048];
+    char tmp[262144];
     int n = recv(fd, tmp, sizeof(tmp)-1, 0);
     if (n <= 0) 
     { 
