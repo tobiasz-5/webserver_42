@@ -1,7 +1,7 @@
 #include "config.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
-#include "Manage_req.hpp"
+#include "manage_request.hpp"
 
 #include <sys/epoll.h>
 #include <vector>
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
                     else if (client.at(fd).getRequest().getComplete() == true)
                     {
                         //client.at(fd).getRequest().setComplete(false);
-                        Manage_req::set_response_for_client(client.at(fd));
+                        set_response_for_client(client.at(fd));
                         //std::cout << client.at(fd).getresponse() << std::endl; //print repsonse for debug
                         struct epoll_event ev;
                         ev.events = EPOLLOUT;

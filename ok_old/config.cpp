@@ -30,28 +30,24 @@ void fill_route(route &current_route, const std::vector<std::string> &tokens)
 void fill_config(config &current_config, const std::vector<std::string> &tokens)
 {
     if (tokens[0] == "listen")
-	{
-		std::string addr_port = tokens[1];
-		if (!addr_port.empty() && addr_port[addr_port.size() - 1] == ';')
-			addr_port.erase(addr_port.size() - 1);
-
-		size_t colon_pos = addr_port.find(':');
-		std::string ip;
-		int port;
-
-		if (colon_pos == std::string::npos)
-		{
-			ip = "0.0.0.0";
-			port = to_int(addr_port);
-		}
-		else
-		{
-			ip = addr_port.substr(0, colon_pos);
-			port = to_int(addr_port.substr(colon_pos + 1));
-		}
-
-		current_config.listen_por.push_back(std::make_pair(ip, port));
-	}
+    {
+        std::string addr_port = tokens[1];
+        if (!addr_port.empty() && addr_port[addr_port.size() - 1] == ';')
+            addr_port.erase(addr_port.size() - 1);
+        size_t colon_pos = addr_port.find(':');
+        if (colon_pos == std::string::npos)
+        {
+            current_config.listen_address = "0.0.0.0";
+            int port = to_int(addr_port);
+            current_config.ports.push_back(port);
+        }
+        else
+        {
+            current_config.listen_address = addr_port.substr(0, colon_pos);
+            int port = to_int(addr_port.substr(colon_pos + 1));
+            current_config.ports.push_back(port);
+        }
+    }
     else if (tokens[0] == "server_name")
         current_config.server_name = tokens[1];
     else if (tokens[0] == "host")
@@ -89,10 +85,12 @@ void print_config(const std::vector<config> &conf_list)
     {
         const config &c = conf_list[i];
         std::cout << "=== Config for Server " << i + 1 << " ===\n";
-        std::cout << "Ports and listen address: ";
-        for (std::vector<std::pair<std::string, int> >::const_iterator it = c.listen_por.begin(); it != c.listen_por.end(); ++it)
+        std::cout << "Listen Address: " << c.listen_address << "\n";
+        std::cout << "Ports: ";
+        for (size_t j = 0; j < c.ports.size(); ++j)
         {
-            std::cout << it->first << ":" << it->second << "\n";
+            std::cout << c.ports[j];
+            if (j != c.ports.size() - 1) std::cout << ", ";
         }
         std::cout << "\n";
         std::cout << "Server Name: " << c.server_name << "\n";

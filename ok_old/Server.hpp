@@ -16,8 +16,9 @@
 class Server
 {
     private:
-		std::vector<std::pair<std::string, int> > listen_por;
+        std::vector<int> ports;
         std::string host;
+        std::string listen_address;
         std::string server_name;
         std::map<int, std::string> error_pages;
         size_t max_body_size;
