@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #333;
+        }
+        .profile {
+            margin-top: 20px;
+        }
+        .profile img {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+        .form-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .form-field {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-field input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+            text-decoration: none;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Profile 3</h1>
+    <div class="profile">
+        <img src="/images/pokemon.jpg" alt="Profile 3 Image">
+        <p>Name: pokemon</p>
+    </div>
+
+    <div class="form-section">
+        <h2>Send Data</h2>
+        <form action="/upload" method="post">
+            <div class="form-field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="e.g. micione3" required>
+            </div>
+            <div class="form-field">
+                <label for="message">Message</label>
+                <input type="text" id="message" name="message" placeholder="Your message..." required>
+            </div>
+            <button type="submit" class="submit-btn">Send POST</button>
+        </form>
+    </div>
+
+    <a class="back-link" href="/index.html">Back to Homepage</a>
+</body>
+</html>

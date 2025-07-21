@@ -53,7 +53,9 @@ void fill_config(config &current_config, const std::vector<std::string> &tokens)
 		current_config.listen_por.push_back(std::make_pair(ip, port));
 	}
     else if (tokens[0] == "server_name")
-        current_config.server_name = tokens[1];
+	{
+        current_config.server_name.assign(tokens.begin() + 1, tokens.end());
+    }
     else if (tokens[0] == "host")
         current_config.host = tokens[1];
     else if (tokens[0] == "max_body_size")
@@ -95,7 +97,13 @@ void print_config(const std::vector<config> &conf_list)
             std::cout << it->first << ":" << it->second << "\n";
         }
         std::cout << "\n";
-        std::cout << "Server Name: " << c.server_name << "\n";
+        std::cout << "Server Name: ";
+		for (size_t m = 0; m < c.server_name.size(); ++m)
+        {
+            std::cout << c.server_name[m];
+            if (m != c.server_name.size() - 1) std::cout << ", ";
+        }
+		std::cout << "\n";
         std::cout << "Host: " << c.host << "\n";
         std::cout << "Max Body Size: " << c.max_body_size << "\n";
         std::cout << "Error Pages:\n";

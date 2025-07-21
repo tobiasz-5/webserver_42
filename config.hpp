@@ -29,9 +29,7 @@ struct route
 struct config  //rimepire le struct con parsing del config file
 {
     std::vector<std::pair<std::string, int> > listen_por; // IP:PORT coppie
-	//std::string listen_address;
-    //std::vector<int> ports;
-    std::string server_name;
+    std::vector<std::string> server_name;
     std::string host;
     std::map<int, std::string> error_pages;
     size_t max_body_size;
@@ -44,6 +42,14 @@ struct config  //rimepire le struct con parsing del config file
 				return ("Wrong number of arguments exception");
 			}
 	};
+};
+
+struct SocketBinding //struct for save each socket 
+{
+    std::string ip;
+    int port;
+    int fd;
+    //Server* server;
 };
 
 void fill_configstruct(std::vector<config> &conf, const std::string &filename);

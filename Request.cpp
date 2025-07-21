@@ -89,6 +89,25 @@ void Request::clearData()
     chunked = false;
 }
 
+std::string Request::getHostHeader() const
+{
+    // Cerca l'header Host nella request buffer
+    std::size_t pos = buffer.find("Host:");
+    if (pos == std::string::npos)
+        return "";
+
+    pos += 5; // salta "Host:"
+    std::size_t end = buffer.find("\r\n", pos);
+    if (end == std::string::npos)
+        return "";
+
+    std::string host = buffer.substr(pos, end - pos);
+    // rimuovi spazi iniziali/finali
+    host.erase(0, host.find_first_not_of(" \t"));
+    host.erase(host.find_last_not_of(" \t") + 1);
+    return host;
+}
+
 //riceve i dati dalla socket (fd) e li aggiunge al buffer (request line, header, body)
 int Request::receiveData(int fd)
 {

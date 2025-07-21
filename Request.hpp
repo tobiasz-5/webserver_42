@@ -33,13 +33,13 @@ class Request
         const std::map<std::string, std::string> &getHeaders() const;
         const std::string &getBody() const;
 		std::string getHeader(const std::string& key) const;
-        const std::string &getResource() const;
         const bool &getComplete() const;
+		std::string getHostHeader() const;
 
         void clearData(void);
         void setComplete(bool b);
         int receiveData(int fd); // Reads data from the client socket
         void parseRequest(); // Parses the HTTP request
-        bool        isChunked() const { return chunked; }
+        bool isChunked() const { return chunked; }
         std::string unchunkBody(const std::string& raw);
 };
