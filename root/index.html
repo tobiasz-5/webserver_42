@@ -37,6 +37,33 @@
         .form_upload {
             padding-top: 100px;
         }
+        .go_get
+        {
+            padding-top: 50px;
+            padding-bottom: 20px;
+            
+        }
+        .get_link
+        {
+            border: 4px rgb(218, 224, 57);
+            border-style:dotted;
+            border-radius: 50px;
+            padding: 20px;
+            text-decoration: none;
+            color: #3083db;
+        }
+        /* .form 
+        {
+            color: #d4255f;
+        }
+        .form_input
+        {
+            color: #d4255f;
+        }
+        .dhn
+        {
+            color: #30c119;
+        } */
     </style>
 </head>
 <body>
@@ -56,10 +83,19 @@
         </div>
     </div>
     <div class="form_upload">
-        <form action="/cgi-py/upload.py" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <button type="submit">Upload</button>
+        <form class="form" action="/cgi-py/upload.py" method="post" enctype="multipart/form-data">
+        <input class="form_input" type="file" name="file" required>
+        <button class="dhn" type="submit">Upload</button>
         </form> 
+    </div>
+    <div class="go_get">
+         <a href="/get.html" class="get_link">GET</a>
+    </div>
+    <div class="go_get">
+         <a href="/post.html" class="get_link">POST</a>
+    </div>
+    <div class="go_get">
+         <a href="/get.html" class="get_link">DELETE</a>
     </div>
 </body>
 </html>
