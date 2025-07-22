@@ -2,7 +2,7 @@
 import os, pathlib, cgi, datetime
 
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent          
-UPLOAD_DIR = SCRIPT_DIR.parent / "upload"                     
+UPLOAD_DIR = SCRIPT_DIR.parent / "uploads"                     
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 form = cgi.FieldStorage()
